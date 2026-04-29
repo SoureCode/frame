@@ -1,0 +1,49 @@
+.frame-dock:not(.open) .frame-resizer {
+  display: none;
+}
+
+.frame-resizer {
+  position: absolute;
+  z-index: 2;
+  touch-action: none;
+  user-select: none;
+
+  &::before {
+    content: '';
+    position: absolute;
+  }
+
+  &.left, &.right {
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    cursor: ew-resize;
+
+    &::before {
+      top: 0;
+      bottom: 0;
+      left: -10px;
+      right: -10px;
+    }
+  }
+
+  &.left  { right: 0; }
+  &.right { left: 0; }
+
+  &.top, &.bottom {
+    left: 0;
+    right: 0;
+    height: 1px;
+    cursor: ns-resize;
+
+    &::before {
+      left: 0;
+      right: 0;
+      top: -10px;
+      bottom: -10px;
+    }
+  }
+
+  &.top    { bottom: 0; }
+  &.bottom { top: 0; }
+}

@@ -1,0 +1,118 @@
+.frame-rail {
+  display: flex;
+  box-sizing: border-box;
+  background: var(--frame-color-bg-rail);
+  backdrop-filter: var(--frame-backdrop-filter, none);
+
+  &.left, &.right {
+    width: var(--frame-rail-size);
+    flex-direction: column;
+    border-right: 1px solid var(--frame-color-border);
+  }
+
+  &.right {
+    border-right: none;
+    border-left: 1px solid var(--frame-color-border);
+  }
+
+  &.top, &.bottom {
+    height: var(--frame-rail-size);
+    flex-direction: row;
+    border-bottom: 1px solid var(--frame-color-border);
+  }
+
+  &.bottom {
+    border-bottom: none;
+    border-top: 1px solid var(--frame-color-border);
+  }
+}
+
+.rail-slot {
+  display: flex;
+  flex: 1;
+
+  .frame-rail.left &,
+  .frame-rail.right & {
+    flex-direction: column;
+  }
+
+  .frame-rail.top &,
+  .frame-rail.bottom & {
+    flex-direction: row;
+  }
+
+  .frame-rail.top &:last-child,
+  .frame-rail.bottom &:last-child {
+    justify-content: flex-end;
+  }
+
+  .frame-rail.left &:last-child,
+  .frame-rail.right &:last-child {
+    justify-content: flex-end;
+  }
+}
+
+.rail-icon {
+  background: var(--frame-color-bg-icon);
+  border: none;
+  border-radius: var(--frame-icon-radius);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--frame-icon-size);
+  height: var(--frame-icon-size);
+  flex-shrink: 0;
+  font-family: var(--frame-font-family, inherit);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--frame-color-icon);
+  transition: color 0.15s, background 0.15s;
+
+  .frame-rail.left &,
+  .frame-rail.right & {
+    margin: 4px auto;
+  }
+
+  .frame-rail.top &,
+  .frame-rail.bottom & {
+    margin: auto 4px;
+  }
+
+  &:hover {
+    color: var(--frame-color-icon-hover);
+    background: var(--frame-color-bg-icon-hover);
+  }
+
+  &.active {
+    color: var(--frame-color-icon-active);
+    background: var(--frame-color-bg-icon-active);
+  }
+
+  & > * {
+    width: var(--frame-icon-inner-size);
+    height: var(--frame-icon-inner-size);
+    flex-shrink: 0;
+    pointer-events: none;
+  }
+}
+
+.rail-placeholder {
+  opacity: 0.4;
+  border: 2px dashed var(--frame-color-placeholder);
+  border-radius: var(--frame-icon-radius);
+  flex-shrink: 0;
+  width: var(--frame-icon-size);
+  height: var(--frame-icon-size);
+
+  .frame-rail.left &,
+  .frame-rail.right & {
+    margin: 4px auto;
+  }
+
+  .frame-rail.top &,
+  .frame-rail.bottom & {
+    margin: auto 4px;
+  }
+}

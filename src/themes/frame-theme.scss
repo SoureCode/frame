@@ -1,0 +1,644 @@
+.frame {
+  --frame-rail-size: 36px;
+  --frame-icon-size: 24px;
+  --frame-icon-inner-size: 16px;
+  --frame-panel-header-height: var(--frame-rail-size);
+  --frame-panel-title-padding: 0 10px;
+  --frame-icon-radius: 4px;
+  --frame-font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+
+  /* obsidian — deep space navy with electric violet gem accents */
+  --frame-color-bg-stage: #0b0d18;
+  --frame-color-bg-dock: #0e1225;
+  --frame-color-bg-rail: #080a13;
+  --frame-color-bg-panel-header: #101428;
+  --frame-color-bg-icon: #151e36;
+  --frame-color-bg-icon-hover: #1e2d4f;
+  --frame-color-bg-icon-active: #5b21b6;
+  --frame-color-bg-btn-hover: #1e2d4f;
+  --frame-color-border: #192340;
+  --frame-color-border-active: #7c3aed;
+  --frame-color-icon: #6b7fae;
+  --frame-color-icon-hover: #a78bfa;
+  --frame-color-icon-active: #f5f0ff;
+  --frame-color-panel-title: #dde6ff;
+  --frame-color-panel-btn: #6b7fae;
+  --frame-color-panel-btn-hover: #a78bfa;
+  --frame-color-panel-content: #8896b8;
+  --frame-color-placeholder: #3a4870;
+  --frame-color-splitter: #192340;
+  --frame-color-splitter-active: #7c3aed;
+}
+
+.frame[data-theme="high-contrast"] {
+  --frame-color-bg-stage: #000000;
+  --frame-color-bg-dock: #0a0a0a;
+  --frame-color-bg-rail: #000000;
+  --frame-color-bg-panel-header: #0a0a0a;
+  --frame-color-bg-icon: #111111;
+  --frame-color-bg-icon-hover: #222222;
+  --frame-color-bg-icon-active: #ffff00;
+  --frame-color-bg-btn-hover: #222222;
+  --frame-color-border: #ffffff;
+  --frame-color-border-active: #ffff00;
+  --frame-color-icon: #ffffff;
+  --frame-color-icon-hover: #ffff00;
+  --frame-color-icon-active: #000000;
+  --frame-color-panel-title: #ffffff;
+  --frame-color-panel-btn: #ffffff;
+  --frame-color-panel-btn-hover: #ffff00;
+  --frame-color-panel-content: #cccccc;
+  --frame-color-placeholder: #ffffff;
+  --frame-color-splitter: #ffffff;
+  --frame-color-splitter-active: #ffff00;
+}
+
+.frame[data-theme="warm"] {
+  --frame-color-bg-stage: #1a1208;
+  --frame-color-bg-dock: #211608;
+  --frame-color-bg-rail: #140e05;
+  --frame-color-bg-panel-header: #1e1408;
+  --frame-color-bg-icon: #2a1c0c;
+  --frame-color-bg-icon-hover: #3a2810;
+  --frame-color-bg-icon-active: #c87010;
+  --frame-color-bg-btn-hover: #3a2810;
+  --frame-color-border: #3d2810;
+  --frame-color-border-active: #c87010;
+  --frame-color-icon: #c09050;
+  --frame-color-icon-hover: #e0b870;
+  --frame-color-icon-active: #fff0d0;
+  --frame-color-panel-title: #f0d890;
+  --frame-color-panel-btn: #c09050;
+  --frame-color-panel-btn-hover: #e0b870;
+  --frame-color-panel-content: #b08060;
+  --frame-color-placeholder: #c09050;
+  --frame-color-splitter: #3d2810;
+  --frame-color-splitter-active: #c87010;
+}
+
+.frame[data-theme="nord"] {
+  --frame-color-bg-stage: #2e3440;
+  --frame-color-bg-dock: #3b4252;
+  --frame-color-bg-rail: #242933;
+  --frame-color-bg-panel-header: #353c4a;
+  --frame-color-bg-icon: #3b4252;
+  --frame-color-bg-icon-hover: #434c5e;
+  --frame-color-bg-icon-active: #5e81ac;
+  --frame-color-bg-btn-hover: #434c5e;
+  --frame-color-border: #4c566a;
+  --frame-color-border-active: #88c0d0;
+  --frame-color-icon: #8ca0bc;
+  --frame-color-icon-hover: #88c0d0;
+  --frame-color-icon-active: #eceff4;
+  --frame-color-panel-title: #d8dee9;
+  --frame-color-panel-btn: #8ca0bc;
+  --frame-color-panel-btn-hover: #88c0d0;
+  --frame-color-panel-content: #8090a8;
+  --frame-color-placeholder: #8ca0bc;
+  --frame-color-splitter: #4c566a;
+  --frame-color-splitter-active: #88c0d0;
+}
+
+.frame[data-theme="terminal"] {
+  --frame-font-family: 'Courier New', 'Lucida Console', monospace;
+  --frame-color-bg-stage: #000000;
+  --frame-color-bg-dock: #030d03;
+  --frame-color-bg-rail: #000000;
+  --frame-color-bg-panel-header: #041004;
+  --frame-color-bg-icon: #071407;
+  --frame-color-bg-icon-hover: #0a1e0a;
+  --frame-color-bg-icon-active: #00aa00;
+  --frame-color-bg-btn-hover: #0a1e0a;
+  --frame-color-border: #005500;
+  --frame-color-border-active: #00ff00;
+  --frame-color-icon: #00cc00;
+  --frame-color-icon-hover: #00ee00;
+  --frame-color-icon-active: #000000;
+  --frame-color-panel-title: #00ff00;
+  --frame-color-panel-btn: #00cc00;
+  --frame-color-panel-btn-hover: #00ee00;
+  --frame-color-panel-content: #009900;
+  --frame-color-placeholder: #008800;
+  --frame-color-splitter: #005500;
+  --frame-color-splitter-active: #00ff00;
+}
+
+.frame[data-theme="light"] {
+  --frame-color-bg-stage: #eef3ff;
+  --frame-color-bg-dock: #e4ecff;
+  --frame-color-bg-rail: #d8e4f8;
+  --frame-color-bg-panel-header: #dce8ff;
+  --frame-color-bg-icon: #c8d8f4;
+  --frame-color-bg-icon-hover: #b4c8ee;
+  --frame-color-bg-icon-active: #0044cc;
+  --frame-color-bg-btn-hover: #ccd8f0;
+  --frame-color-border: #aabcdc;
+  --frame-color-border-active: #0044cc;
+  --frame-color-icon: #1a4a99;
+  --frame-color-icon-hover: #003388;
+  --frame-color-icon-active: #ffffff;
+  --frame-color-panel-title: #0a2060;
+  --frame-color-panel-btn: #1a4a99;
+  --frame-color-panel-btn-hover: #003388;
+  --frame-color-panel-content: #1a3070;
+  --frame-color-placeholder: #1a4a99;
+  --frame-color-splitter: #aabcdc;
+  --frame-color-splitter-active: #0044cc;
+}
+
+.frame[data-theme="solarized"] {
+  --frame-color-bg-stage: #fdf6e3;
+  --frame-color-bg-dock: #eee8d5;
+  --frame-color-bg-rail: #e8e2d0;
+  --frame-color-bg-panel-header: #ece6d4;
+  --frame-color-bg-icon: #e4ddc8;
+  --frame-color-bg-icon-hover: #d8d0b8;
+  --frame-color-bg-icon-active: #268bd2;
+  --frame-color-bg-btn-hover: #d8d0b8;
+  --frame-color-border: #cfc8b0;
+  --frame-color-border-active: #268bd2;
+  --frame-color-icon: #586e75;
+  --frame-color-icon-hover: #2aa198;
+  --frame-color-icon-active: #fdf6e3;
+  --frame-color-panel-title: #073642;
+  --frame-color-panel-btn: #586e75;
+  --frame-color-panel-btn-hover: #2aa198;
+  --frame-color-panel-content: #405860;
+  --frame-color-placeholder: #586e75;
+  --frame-color-splitter: #cfc8b0;
+  --frame-color-splitter-active: #268bd2;
+}
+
+.frame[data-theme="rose"] {
+  --frame-color-bg-stage: #fff5f7;
+  --frame-color-bg-dock: #fce8ed;
+  --frame-color-bg-rail: #f8dde4;
+  --frame-color-bg-panel-header: #fae2e8;
+  --frame-color-bg-icon: #f4d0d8;
+  --frame-color-bg-icon-hover: #edc0cc;
+  --frame-color-bg-icon-active: #c02060;
+  --frame-color-bg-btn-hover: #edc0cc;
+  --frame-color-border: #e8b8c4;
+  --frame-color-border-active: #c02060;
+  --frame-color-icon: #803050;
+  --frame-color-icon-hover: #c02060;
+  --frame-color-icon-active: #ffffff;
+  --frame-color-panel-title: #500828;
+  --frame-color-panel-btn: #803050;
+  --frame-color-panel-btn-hover: #c02060;
+  --frame-color-panel-content: #682040;
+  --frame-color-placeholder: #803050;
+  --frame-color-splitter: #e8b8c4;
+  --frame-color-splitter-active: #c02060;
+}
+
+.frame[data-theme="paper"] {
+  --frame-font-family: Georgia, 'Times New Roman', serif;
+  --frame-color-bg-stage: #ffffff;
+  --frame-color-bg-dock: #f8f8f8;
+  --frame-color-bg-rail: #f0f0f0;
+  --frame-color-bg-panel-header: #f4f4f4;
+  --frame-color-bg-icon: #ebebeb;
+  --frame-color-bg-icon-hover: #e0e0e0;
+  --frame-color-bg-icon-active: #1a1a1a;
+  --frame-color-bg-btn-hover: #e0e0e0;
+  --frame-color-border: #d8d8d8;
+  --frame-color-border-active: #1a1a1a;
+  --frame-color-icon: #555555;
+  --frame-color-icon-hover: #111111;
+  --frame-color-icon-active: #ffffff;
+  --frame-color-panel-title: #111111;
+  --frame-color-panel-btn: #555555;
+  --frame-color-panel-btn-hover: #111111;
+  --frame-color-panel-content: #444444;
+  --frame-color-placeholder: #555555;
+  --frame-color-splitter: #d8d8d8;
+  --frame-color-splitter-active: #1a1a1a;
+}
+
+.frame[data-theme="dracula"] {
+  --frame-font-family: 'Fira Code', 'Cascadia Code', monospace;
+  --frame-color-bg-stage: #282a36;
+  --frame-color-bg-dock: #21222c;
+  --frame-color-bg-rail: #191a21;
+  --frame-color-bg-panel-header: #21222c;
+  --frame-color-bg-icon: #2a2d3a;
+  --frame-color-bg-icon-hover: #343746;
+  --frame-color-bg-icon-active: #bd93f9;
+  --frame-color-bg-btn-hover: #343746;
+  --frame-color-border: #44475a;
+  --frame-color-border-active: #bd93f9;
+  --frame-color-icon: #6272a4;
+  --frame-color-icon-hover: #8be9fd;
+  --frame-color-icon-active: #f8f8f2;
+  --frame-color-panel-title: #f8f8f2;
+  --frame-color-panel-btn: #6272a4;
+  --frame-color-panel-btn-hover: #8be9fd;
+  --frame-color-panel-content: #8090b4;
+  --frame-color-placeholder: #6272a4;
+  --frame-color-splitter: #44475a;
+  --frame-color-splitter-active: #bd93f9;
+}
+
+.frame[data-theme="monokai"] {
+  --frame-font-family: 'Fira Code', 'Consolas', monospace;
+  --frame-color-bg-stage: #272822;
+  --frame-color-bg-dock: #1e1f1a;
+  --frame-color-bg-rail: #181914;
+  --frame-color-bg-panel-header: #1e1f1a;
+  --frame-color-bg-icon: #2a2b25;
+  --frame-color-bg-icon-hover: #35362e;
+  --frame-color-bg-icon-active: #a6e22e;
+  --frame-color-bg-btn-hover: #35362e;
+  --frame-color-border: #3a3b32;
+  --frame-color-border-active: #a6e22e;
+  --frame-color-icon: #75715e;
+  --frame-color-icon-hover: #e6db74;
+  --frame-color-icon-active: #272822;
+  --frame-color-panel-title: #f8f8f2;
+  --frame-color-panel-btn: #75715e;
+  --frame-color-panel-btn-hover: #e6db74;
+  --frame-color-panel-content: #908880;
+  --frame-color-placeholder: #75715e;
+  --frame-color-splitter: #3a3b32;
+  --frame-color-splitter-active: #a6e22e;
+}
+
+.frame[data-theme="glass-dark"] {
+  --frame-backdrop-filter: blur(20px) saturate(1.8);
+  --frame-color-bg-base: linear-gradient(135deg, #0a0e1a 0%, #0d1530 50%, #0a1428 100%);
+  --frame-color-bg-stage: transparent;
+  --frame-color-bg-dock: rgba(10, 18, 40, 0.55);
+  --frame-color-bg-rail: rgba(6, 12, 28, 0.70);
+  --frame-color-bg-panel-header: rgba(12, 22, 48, 0.60);
+  --frame-color-bg-icon: rgba(30, 50, 100, 0.40);
+  --frame-color-bg-icon-hover: rgba(40, 70, 140, 0.55);
+  --frame-color-bg-icon-active: rgba(0, 90, 220, 0.80);
+  --frame-color-bg-btn-hover: rgba(40, 70, 140, 0.55);
+  --frame-color-border: rgba(80, 120, 220, 0.25);
+  --frame-color-border-active: rgba(80, 160, 255, 0.70);
+  --frame-color-icon: #6090d0;
+  --frame-color-icon-hover: #90c0ff;
+  --frame-color-icon-active: #e8f4ff;
+  --frame-color-panel-title: #c0d8f8;
+  --frame-color-panel-btn: #6090d0;
+  --frame-color-panel-btn-hover: #90c0ff;
+  --frame-color-panel-content: #8090b0;
+  --frame-color-placeholder: rgba(80, 120, 200, 0.60);
+  --frame-color-splitter: rgba(80, 120, 220, 0.25);
+  --frame-color-splitter-active: rgba(80, 160, 255, 0.70);
+}
+
+.frame[data-theme="glass-light"] {
+  --frame-backdrop-filter: blur(20px) saturate(1.6);
+  --frame-color-bg-base: linear-gradient(135deg, #e8f0ff 0%, #f0f4ff 50%, #dceaff 100%);
+  --frame-color-bg-stage: transparent;
+  --frame-color-bg-dock: rgba(200, 220, 255, 0.45);
+  --frame-color-bg-rail: rgba(180, 205, 255, 0.60);
+  --frame-color-bg-panel-header: rgba(210, 225, 255, 0.50);
+  --frame-color-bg-icon: rgba(160, 190, 245, 0.45);
+  --frame-color-bg-icon-hover: rgba(140, 175, 240, 0.60);
+  --frame-color-bg-icon-active: rgba(0, 70, 200, 0.85);
+  --frame-color-bg-btn-hover: rgba(140, 175, 240, 0.60);
+  --frame-color-border: rgba(80, 120, 210, 0.30);
+  --frame-color-border-active: rgba(0, 70, 200, 0.70);
+  --frame-color-icon: #1a4a99;
+  --frame-color-icon-hover: #003388;
+  --frame-color-icon-active: #ffffff;
+  --frame-color-panel-title: #082060;
+  --frame-color-panel-btn: #1a4a99;
+  --frame-color-panel-btn-hover: #003388;
+  --frame-color-panel-content: #1a3070;
+  --frame-color-placeholder: rgba(20, 60, 150, 0.55);
+  --frame-color-splitter: rgba(80, 120, 210, 0.30);
+  --frame-color-splitter-active: rgba(0, 70, 200, 0.70);
+}
+
+.frame[data-theme="catppuccin"] {
+  --frame-font-family: 'Inter', 'Segoe UI', sans-serif;
+  --frame-color-bg-stage: #1e1e2e;
+  --frame-color-bg-dock: #181825;
+  --frame-color-bg-rail: #11111b;
+  --frame-color-bg-panel-header: #181825;
+  --frame-color-bg-icon: #1e1e2e;
+  --frame-color-bg-icon-hover: #313244;
+  --frame-color-bg-icon-active: #cba6f7;
+  --frame-color-bg-btn-hover: #313244;
+  --frame-color-border: #313244;
+  --frame-color-border-active: #cba6f7;
+  --frame-color-icon: #6c7086;
+  --frame-color-icon-hover: #89b4fa;
+  --frame-color-icon-active: #1e1e2e;
+  --frame-color-panel-title: #cdd6f4;
+  --frame-color-panel-btn: #6c7086;
+  --frame-color-panel-btn-hover: #89b4fa;
+  --frame-color-panel-content: #9399b2;
+  --frame-color-placeholder: #585b70;
+  --frame-color-splitter: #313244;
+  --frame-color-splitter-active: #cba6f7;
+}
+
+.frame[data-theme="gruvbox"] {
+  --frame-font-family: 'Fira Code', 'JetBrains Mono', monospace;
+  --frame-color-bg-stage: #282828;
+  --frame-color-bg-dock: #1d2021;
+  --frame-color-bg-rail: #161819;
+  --frame-color-bg-panel-header: #1d2021;
+  --frame-color-bg-icon: #282828;
+  --frame-color-bg-icon-hover: #3c3836;
+  --frame-color-bg-icon-active: #d79921;
+  --frame-color-bg-btn-hover: #3c3836;
+  --frame-color-border: #504945;
+  --frame-color-border-active: #d79921;
+  --frame-color-icon: #928374;
+  --frame-color-icon-hover: #d65d0e;
+  --frame-color-icon-active: #282828;
+  --frame-color-panel-title: #ebdbb2;
+  --frame-color-panel-btn: #928374;
+  --frame-color-panel-btn-hover: #d65d0e;
+  --frame-color-panel-content: #a89984;
+  --frame-color-placeholder: #665c54;
+  --frame-color-splitter: #504945;
+  --frame-color-splitter-active: #d79921;
+}
+
+.frame[data-theme="tokyo-night"] {
+  --frame-color-bg-stage: #1a1b2e;
+  --frame-color-bg-dock: #16172a;
+  --frame-color-bg-rail: #13141f;
+  --frame-color-bg-panel-header: #16172a;
+  --frame-color-bg-icon: #1e2035;
+  --frame-color-bg-icon-hover: #292b45;
+  --frame-color-bg-icon-active: #7aa2f7;
+  --frame-color-bg-btn-hover: #292b45;
+  --frame-color-border: #292b45;
+  --frame-color-border-active: #7aa2f7;
+  --frame-color-icon: #565f89;
+  --frame-color-icon-hover: #bb9af7;
+  --frame-color-icon-active: #c0caf5;
+  --frame-color-panel-title: #c0caf5;
+  --frame-color-panel-btn: #565f89;
+  --frame-color-panel-btn-hover: #bb9af7;
+  --frame-color-panel-content: #6e7faf;
+  --frame-color-placeholder: #414868;
+  --frame-color-splitter: #292b45;
+  --frame-color-splitter-active: #7aa2f7;
+}
+
+.frame[data-theme="synthwave"] {
+  --frame-font-family: 'Fira Code', 'Courier New', monospace;
+  --frame-color-bg-stage: #1a0533;
+  --frame-color-bg-dock: #150326;
+  --frame-color-bg-rail: #0e0220;
+  --frame-color-bg-panel-header: #150326;
+  --frame-color-bg-icon: #1e0a38;
+  --frame-color-bg-icon-hover: #2a0f50;
+  --frame-color-bg-icon-active: #ff2d78;
+  --frame-color-bg-btn-hover: #2a0f50;
+  --frame-color-border: #3d1060;
+  --frame-color-border-active: #ff2d78;
+  --frame-color-icon: #cc44ff;
+  --frame-color-icon-hover: #ff66ff;
+  --frame-color-icon-active: #ffffff;
+  --frame-color-panel-title: #ff88ff;
+  --frame-color-panel-btn: #cc44ff;
+  --frame-color-panel-btn-hover: #ff66ff;
+  --frame-color-panel-content: #aa44cc;
+  --frame-color-placeholder: #7722aa;
+  --frame-color-splitter: #3d1060;
+  --frame-color-splitter-active: #ff2d78;
+}
+
+.frame[data-theme="everforest"] {
+  --frame-color-bg-stage: #2d353b;
+  --frame-color-bg-dock: #272e33;
+  --frame-color-bg-rail: #1e2326;
+  --frame-color-bg-panel-header: #272e33;
+  --frame-color-bg-icon: #2d353b;
+  --frame-color-bg-icon-hover: #3d484d;
+  --frame-color-bg-icon-active: #a7c080;
+  --frame-color-bg-btn-hover: #3d484d;
+  --frame-color-border: #475258;
+  --frame-color-border-active: #a7c080;
+  --frame-color-icon: #7a8478;
+  --frame-color-icon-hover: #83c092;
+  --frame-color-icon-active: #1e2326;
+  --frame-color-panel-title: #d3c6aa;
+  --frame-color-panel-btn: #7a8478;
+  --frame-color-panel-btn-hover: #83c092;
+  --frame-color-panel-content: #9da9a0;
+  --frame-color-placeholder: #5c6a72;
+  --frame-color-splitter: #475258;
+  --frame-color-splitter-active: #a7c080;
+}
+
+.frame[data-theme="sepia"] {
+  --frame-font-family: Georgia, 'Palatino Linotype', serif;
+  --frame-color-bg-stage: #f4eed8;
+  --frame-color-bg-dock: #ede6cc;
+  --frame-color-bg-rail: #e4dcc0;
+  --frame-color-bg-panel-header: #e8e0c8;
+  --frame-color-bg-icon: #ddd4b4;
+  --frame-color-bg-icon-hover: #d0c8a4;
+  --frame-color-bg-icon-active: #7b4f1e;
+  --frame-color-bg-btn-hover: #d0c8a4;
+  --frame-color-border: #c8bc98;
+  --frame-color-border-active: #7b4f1e;
+  --frame-color-icon: #6b4c28;
+  --frame-color-icon-hover: #3e2206;
+  --frame-color-icon-active: #f4eed8;
+  --frame-color-panel-title: #2c1a06;
+  --frame-color-panel-btn: #6b4c28;
+  --frame-color-panel-btn-hover: #3e2206;
+  --frame-color-panel-content: #4a3418;
+  --frame-color-placeholder: #8a6840;
+  --frame-color-splitter: #c8bc98;
+  --frame-color-splitter-active: #7b4f1e;
+}
+
+.frame[data-theme="github-light"] {
+  --frame-font-family: -apple-system, 'Segoe UI', sans-serif;
+  --frame-color-bg-stage: #ffffff;
+  --frame-color-bg-dock: #f6f8fa;
+  --frame-color-bg-rail: #eaeef2;
+  --frame-color-bg-panel-header: #f6f8fa;
+  --frame-color-bg-icon: #eaeef2;
+  --frame-color-bg-icon-hover: #dde3ea;
+  --frame-color-bg-icon-active: #0969da;
+  --frame-color-bg-btn-hover: #dde3ea;
+  --frame-color-border: #d0d7de;
+  --frame-color-border-active: #0969da;
+  --frame-color-icon: #57606a;
+  --frame-color-icon-hover: #0969da;
+  --frame-color-icon-active: #ffffff;
+  --frame-color-panel-title: #1f2328;
+  --frame-color-panel-btn: #57606a;
+  --frame-color-panel-btn-hover: #0969da;
+  --frame-color-panel-content: #424a53;
+  --frame-color-placeholder: #8c959f;
+  --frame-color-splitter: #d0d7de;
+  --frame-color-splitter-active: #0969da;
+}
+
+.frame[data-theme="ayu"] {
+  --frame-color-bg-stage: #fafafa;
+  --frame-color-bg-dock: #f3f4f5;
+  --frame-color-bg-rail: #eaebec;
+  --frame-color-bg-panel-header: #f3f4f5;
+  --frame-color-bg-icon: #e8e9ea;
+  --frame-color-bg-icon-hover: #dddee0;
+  --frame-color-bg-icon-active: #ff9940;
+  --frame-color-bg-btn-hover: #dddee0;
+  --frame-color-border: #d4d5d8;
+  --frame-color-border-active: #ff9940;
+  --frame-color-icon: #6c7680;
+  --frame-color-icon-hover: #399ee6;
+  --frame-color-icon-active: #ffffff;
+  --frame-color-panel-title: #1a1c1e;
+  --frame-color-panel-btn: #6c7680;
+  --frame-color-panel-btn-hover: #399ee6;
+  --frame-color-panel-content: #4a5260;
+  --frame-color-placeholder: #9aa0aa;
+  --frame-color-splitter: #d4d5d8;
+  --frame-color-splitter-active: #ff9940;
+}
+
+.frame[data-theme="mint"] {
+  --frame-color-bg-stage: #f2faf6;
+  --frame-color-bg-dock: #e6f5ee;
+  --frame-color-bg-rail: #d8ede4;
+  --frame-color-bg-panel-header: #e0f0e8;
+  --frame-color-bg-icon: #cce8d8;
+  --frame-color-bg-icon-hover: #b8dcca;
+  --frame-color-bg-icon-active: #0e7c52;
+  --frame-color-bg-btn-hover: #b8dcca;
+  --frame-color-border: #a8d4bc;
+  --frame-color-border-active: #0e7c52;
+  --frame-color-icon: #1a6644;
+  --frame-color-icon-hover: #0a4830;
+  --frame-color-icon-active: #f2faf6;
+  --frame-color-panel-title: #062818;
+  --frame-color-panel-btn: #1a6644;
+  --frame-color-panel-btn-hover: #0a4830;
+  --frame-color-panel-content: #1e5438;
+  --frame-color-placeholder: #4a9470;
+  --frame-color-splitter: #a8d4bc;
+  --frame-color-splitter-active: #0e7c52;
+}
+
+.frame[data-theme="lavender"] {
+  --frame-color-bg-stage: #faf8ff;
+  --frame-color-bg-dock: #f2eeff;
+  --frame-color-bg-rail: #e8e2f8;
+  --frame-color-bg-panel-header: #ede8fc;
+  --frame-color-bg-icon: #e0d8f8;
+  --frame-color-bg-icon-hover: #d0c6f0;
+  --frame-color-bg-icon-active: #6b3fd4;
+  --frame-color-bg-btn-hover: #d0c6f0;
+  --frame-color-border: #c8bcec;
+  --frame-color-border-active: #6b3fd4;
+  --frame-color-icon: #5c3ea8;
+  --frame-color-icon-hover: #3a1e88;
+  --frame-color-icon-active: #faf8ff;
+  --frame-color-panel-title: #1e0c50;
+  --frame-color-panel-btn: #5c3ea8;
+  --frame-color-panel-btn-hover: #3a1e88;
+  --frame-color-panel-content: #4a2e90;
+  --frame-color-placeholder: #8870c8;
+  --frame-color-splitter: #c8bcec;
+  --frame-color-splitter-active: #6b3fd4;
+}
+
+.frame[data-theme="sky"] {
+  --frame-color-bg-stage: #f0f8ff;
+  --frame-color-bg-dock: #e4f2fd;
+  --frame-color-bg-rail: #d4e8f8;
+  --frame-color-bg-panel-header: #dceefa;
+  --frame-color-bg-icon: #c8e4f6;
+  --frame-color-bg-icon-hover: #b4d8f0;
+  --frame-color-bg-icon-active: #0078c8;
+  --frame-color-bg-btn-hover: #b4d8f0;
+  --frame-color-border: #a0ccec;
+  --frame-color-border-active: #0078c8;
+  --frame-color-icon: #1060a8;
+  --frame-color-icon-hover: #003c78;
+  --frame-color-icon-active: #f0f8ff;
+  --frame-color-panel-title: #042040;
+  --frame-color-panel-btn: #1060a8;
+  --frame-color-panel-btn-hover: #003c78;
+  --frame-color-panel-content: #1a4880;
+  --frame-color-placeholder: #4880b8;
+  --frame-color-splitter: #a0ccec;
+  --frame-color-splitter-active: #0078c8;
+}
+
+.frame[data-theme="sand"] {
+  --frame-color-bg-stage: #fdf8f0;
+  --frame-color-bg-dock: #f5ede0;
+  --frame-color-bg-rail: #ece0cc;
+  --frame-color-bg-panel-header: #f0e6d4;
+  --frame-color-bg-icon: #e8d8c0;
+  --frame-color-bg-icon-hover: #deccaa;
+  --frame-color-bg-icon-active: #b05a00;
+  --frame-color-bg-btn-hover: #deccaa;
+  --frame-color-border: #d4c098;
+  --frame-color-border-active: #b05a00;
+  --frame-color-icon: #7a4c18;
+  --frame-color-icon-hover: #502800;
+  --frame-color-icon-active: #fdf8f0;
+  --frame-color-panel-title: #2c1800;
+  --frame-color-panel-btn: #7a4c18;
+  --frame-color-panel-btn-hover: #502800;
+  --frame-color-panel-content: #5a3410;
+  --frame-color-placeholder: #a07040;
+  --frame-color-splitter: #d4c098;
+  --frame-color-splitter-active: #b05a00;
+}
+
+.frame[data-theme="github-dark"] {
+  --frame-font-family: -apple-system, 'Segoe UI', sans-serif;
+  --frame-color-bg-stage: #0d1117;
+  --frame-color-bg-dock: #161b22;
+  --frame-color-bg-rail: #010409;
+  --frame-color-bg-panel-header: #161b22;
+  --frame-color-bg-icon: #21262d;
+  --frame-color-bg-icon-hover: #30363d;
+  --frame-color-bg-icon-active: #1f6feb;
+  --frame-color-bg-btn-hover: #30363d;
+  --frame-color-border: #30363d;
+  --frame-color-border-active: #1f6feb;
+  --frame-color-icon: #8b949e;
+  --frame-color-icon-hover: #58a6ff;
+  --frame-color-icon-active: #ffffff;
+  --frame-color-panel-title: #e6edf3;
+  --frame-color-panel-btn: #8b949e;
+  --frame-color-panel-btn-hover: #58a6ff;
+  --frame-color-panel-content: #7d8590;
+  --frame-color-placeholder: #484f58;
+  --frame-color-splitter: #30363d;
+  --frame-color-splitter-active: #1f6feb;
+}
+
+.frame[data-theme="github-dimmed"] {
+  --frame-font-family: -apple-system, 'Segoe UI', sans-serif;
+  --frame-color-bg-stage: #22272e;
+  --frame-color-bg-dock: #2d333b;
+  --frame-color-bg-rail: #1c2128;
+  --frame-color-bg-panel-header: #2d333b;
+  --frame-color-bg-icon: #373e47;
+  --frame-color-bg-icon-hover: #444c56;
+  --frame-color-bg-icon-active: #316dca;
+  --frame-color-bg-btn-hover: #444c56;
+  --frame-color-border: #444c56;
+  --frame-color-border-active: #316dca;
+  --frame-color-icon: #768390;
+  --frame-color-icon-hover: #6cb6ff;
+  --frame-color-icon-active: #ffffff;
+  --frame-color-panel-title: #cdd9e5;
+  --frame-color-panel-btn: #768390;
+  --frame-color-panel-btn-hover: #6cb6ff;
+  --frame-color-panel-content: #636e7b;
+  --frame-color-placeholder: #545d68;
+  --frame-color-splitter: #444c56;
+  --frame-color-splitter-active: #316dca;
+}
