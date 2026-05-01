@@ -25,7 +25,11 @@ import '../themes/frame-theme.scss';
 
 export class FrameLayout {
   readonly element: HTMLElement;
-  private readonly stage: HTMLElement;
+  private readonly _stage: HTMLElement;
+
+  get stage(): HTMLElement {
+    return this._stage;
+  }
   private readonly railEls: Record<DockEdge, HTMLElement>;
   private readonly docks: Record<DockEdge, HTMLElement>;
   private readonly slots: Partial<Record<SlotName, HTMLElement>>;
@@ -45,8 +49,8 @@ export class FrameLayout {
     this.resizers = {} as Record<DockEdge, Resizer>;
     this.railEls = this.buildRailElements();
     this.docks = this.buildDocks();
-    this.stage = document.createElement('div');
-    this.stage.className = 'frame-stage';
+    this._stage = document.createElement('div');
+    this._stage.className = 'frame-stage';
     this.element = document.createElement('div');
     this.element.className = 'frame';
     this.buildDOM();
@@ -345,7 +349,12 @@ export class FrameLayout {
     for (const slot of [slotA, slotB] as const) {
       const panelId = this.state.activePanel[slot];
       if (!panelId) { continue; }
-      const config = this.panels.find(p => p.id === panelId)!;
+      const config = this.panels.find(p => p.id === panelId);
+      if (!config) {
+        this.state.activePanel[slot] = null;
+        changed = true;
+        continue;
+      }
       if (config.pinned) { continue; }
       this.panelMap.get(panelId)?.setActive(false);
       this.state.activePanel[slot] = null;
@@ -428,7 +437,7 @@ export class FrameLayout {
     this.element.appendChild(this.docks[DockEdge.Top]);
     this.element.appendChild(this.railEls[DockEdge.Left]);
     this.element.appendChild(this.docks[DockEdge.Left]);
-    this.element.appendChild(this.stage);
+    this.element.appendChild(this._stage);
     this.element.appendChild(this.docks[DockEdge.Right]);
     this.element.appendChild(this.railEls[DockEdge.Right]);
     this.element.appendChild(this.docks[DockEdge.Bottom]);

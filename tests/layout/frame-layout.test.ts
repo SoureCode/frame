@@ -6,6 +6,7 @@ import { PanelEventType } from '../../src/types/panel-event-type.js';
 import { RailEventType } from '../../src/types/rail-event-type.js';
 import { ResizerEventType } from '../../src/types/resizer-event-type.js';
 import { SplitterEventType } from '../../src/types/splitter-event-type.js';
+import { OverlayEventType } from '../../src/types/overlay-event-type.js';
 import type { PanelConfig } from '../../src/types/panel.js';
 import type { StorageAdapter } from '../../src/types/storage-adapter.js';
 import type { LayoutState } from '../../src/types/layout.js';
@@ -409,6 +410,80 @@ describe('FrameLayout', () => {
       layout = new FrameLayout(mount, makePanels());
       dispatch(layout.element, SplitterEventType.Change, { edge: DockEdge.Left, ratio: 0.3 });
       expect(layout.getState().docks[DockEdge.Left].splitRatio).toBe(0.3);
+    });
+  });
+
+  describe('stage', () => {
+    it('exposes stage as a public getter on the prototype', () => {
+      const desc = Object.getOwnPropertyDescriptor(FrameLayout.prototype, 'stage');
+      expect(desc).toBeDefined();
+      expect(typeof desc?.get).toBe('function');
+    });
+
+    it('stage getter returns the .frame-stage element', () => {
+      layout = new FrameLayout(mount, makePanels());
+      const stage = (layout as unknown as { stage: HTMLElement }).stage;
+      expect(stage.classList.contains('frame-stage')).toBe(true);
+      expect(layout.element.contains(stage)).toBe(true);
+    });
+
+    it('consumers can append content to stage', () => {
+      layout = new FrameLayout(mount, makePanels());
+      const stage = (layout as unknown as { stage: HTMLElement }).stage;
+      const child = document.createElement('span');
+      child.textContent = 'mounted';
+      stage.appendChild(child);
+      expect(layout.element.querySelector('.frame-stage')?.contains(child)).toBe(true);
+    });
+  });
+
+  describe('OverlayEventType.Close', () => {
+    it('does not throw when activePanel references an id missing from panels[]', () => {
+      const stored = makeStoredState();
+      stored.activePanel[SlotName.LeftTop] = 'ghost';
+      const storage: StorageAdapter = {
+        load: vi.fn().mockReturnValue(stored),
+        save: vi.fn(),
+      };
+      layout = new FrameLayout(mount, makePanels(), { storage });
+      const handler = (layout as unknown as { onOverlayClose: (e: CustomEvent) => void }).onOverlayClose;
+      const ev = new CustomEvent(OverlayEventType.Close, { detail: { edge: DockEdge.Left } });
+      expect(() => handler.call(layout, ev)).not.toThrow();
+    });
+
+    it('pointerdown outside open dock with stale activePanel id does not report a window error', () => {
+      const stored = makeStoredState();
+      stored.activePanel[SlotName.LeftTop] = 'ghost';
+      const storage: StorageAdapter = {
+        load: vi.fn().mockReturnValue(stored),
+        save: vi.fn(),
+      };
+      layout = new FrameLayout(mount, makePanels(), { storage });
+      const errors: unknown[] = [];
+      const onError = (e: ErrorEvent): void => { errors.push(e.error ?? e.message); };
+      window.addEventListener('error', onError);
+      try {
+        const outside = document.createElement('div');
+        document.body.appendChild(outside);
+        outside.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+        outside.remove();
+      } finally {
+        window.removeEventListener('error', onError);
+      }
+      expect(errors).toEqual([]);
+    });
+
+    it('clears non-pinned panels on overlay close', () => {
+      layout = new FrameLayout(mount, makePanels());
+      layout.openPanel('a');
+      dispatch(layout.element, OverlayEventType.Close, { edge: DockEdge.Left });
+      expect(layout.getState().activePanel[SlotName.LeftTop]).toBeNull();
+    });
+
+    it('preserves pinned panels on overlay close', () => {
+      layout = new FrameLayout(mount, makePanels());
+      dispatch(layout.element, OverlayEventType.Close, { edge: DockEdge.Right });
+      expect(layout.getState().activePanel[SlotName.RightTop]).toBe('c');
     });
   });
 });
