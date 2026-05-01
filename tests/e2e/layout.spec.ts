@@ -209,10 +209,14 @@ test('dragging the left splitter changes the split ratio between its slots', asy
     const y = rect.top + rect.height / 2;
     splitter.dispatchEvent(new PointerEvent('pointerdown', { button: 0, bubbles: true, pointerId: 1, clientX: x, clientY: y }));
     splitter.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerId: 1, clientX: x, clientY: y + 60 }));
-    splitter.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1 }));
   });
 
   await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => resolve())));
+
+  await page.evaluate(() => {
+    const splitter = document.querySelector('.frame-dock.left .frame-splitter') as HTMLElement;
+    splitter.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1 }));
+  });
 
   const slotAfter = await page.locator('.frame-dock.left .dock-slot').first().boundingBox();
 
