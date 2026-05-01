@@ -7,6 +7,8 @@ import { RailEventType } from '../../src/types/rail-event-type.js';
 import { ResizerEventType } from '../../src/types/resizer-event-type.js';
 import { SplitterEventType } from '../../src/types/splitter-event-type.js';
 import { OverlayEventType } from '../../src/types/overlay-event-type.js';
+import { ThemeEventType } from '../../src/types/theme-event-type.js';
+import { RailDisabledEventType } from '../../src/types/rail-disabled-event-type.js';
 import type { PanelConfig } from '../../src/types/panel.js';
 import type { StorageAdapter } from '../../src/types/storage-adapter.js';
 import type { LayoutState } from '../../src/types/layout.js';
@@ -57,6 +59,7 @@ function makeStoredState(): LayoutState {
       b: SlotName.LeftBottom,
       c: SlotName.RightTop,
     },
+    fullscreenPanel: null,
     widescreen: true,
     animated: false,
   };
@@ -413,23 +416,17 @@ describe('FrameLayout', () => {
     });
   });
 
-  describe('stage', () => {
-    it('exposes stage as a public getter on the prototype', () => {
-      const desc = Object.getOwnPropertyDescriptor(FrameLayout.prototype, 'stage');
-      expect(desc).toBeDefined();
-      expect(typeof desc?.get).toBe('function');
-    });
-
-    it('stage getter returns the .frame-stage element', () => {
+  describe('getStage', () => {
+    it('returns the .frame-stage element', () => {
       layout = new FrameLayout(mount, makePanels());
-      const stage = (layout as unknown as { stage: HTMLElement }).stage;
+      const stage = layout.getStage();
       expect(stage.classList.contains('frame-stage')).toBe(true);
       expect(layout.element.contains(stage)).toBe(true);
     });
 
     it('consumers can append content to stage', () => {
       layout = new FrameLayout(mount, makePanels());
-      const stage = (layout as unknown as { stage: HTMLElement }).stage;
+      const stage = layout.getStage();
       const child = document.createElement('span');
       child.textContent = 'mounted';
       stage.appendChild(child);
@@ -484,6 +481,300 @@ describe('FrameLayout', () => {
       layout = new FrameLayout(mount, makePanels());
       dispatch(layout.element, OverlayEventType.Close, { edge: DockEdge.Right });
       expect(layout.getState().activePanel[SlotName.RightTop]).toBe('c');
+    });
+  });
+
+  describe('toggleFullscreen', () => {
+    it('sets fullscreenPanel in state', () => {
+      layout = new FrameLayout(mount, makePanels());
+      layout.openPanel('a');
+      layout.toggleFullscreen('a');
+      expect(layout.getState().fullscreenPanel).toBe('a');
+    });
+
+    it('adds panel-fullscreen class to panel element', () => {
+      layout = new FrameLayout(mount, makePanels());
+      layout.openPanel('a');
+      layout.toggleFullscreen('a');
+      const panel = layout.element.querySelector('.panel-fullscreen');
+      expect(panel).not.toBeNull();
+    });
+
+    it('moves panel element to frame root', () => {
+      layout = new FrameLayout(mount, makePanels());
+      layout.openPanel('a');
+      layout.toggleFullscreen('a');
+      const panel = layout.element.querySelector('.panel-fullscreen');
+      expect(panel?.parentElement).toBe(layout.element);
+    });
+
+    it('exits fullscreen on second toggle', () => {
+      layout = new FrameLayout(mount, makePanels());
+      layout.openPanel('a');
+      layout.toggleFullscreen('a');
+      layout.toggleFullscreen('a');
+      expect(layout.getState().fullscreenPanel).toBeNull();
+    });
+
+    it('removes panel-fullscreen class on exit', () => {
+      layout = new FrameLayout(mount, makePanels());
+      layout.openPanel('a');
+      layout.toggleFullscreen('a');
+      layout.toggleFullscreen('a');
+      expect(layout.element.querySelector('.panel-fullscreen')).toBeNull();
+    });
+
+    it('only one panel can be fullscreen at a time', () => {
+      layout = new FrameLayout(mount, makePanels());
+      layout.openPanel('a');
+      layout.toggleFullscreen('a');
+      layout.toggleFullscreen('c');
+      expect(layout.getState().fullscreenPanel).toBe('c');
+      expect(layout.element.querySelectorAll('.panel-fullscreen').length).toBe(1);
+    });
+
+    it('exits fullscreen when panel is closed', () => {
+      layout = new FrameLayout(mount, makePanels());
+      layout.openPanel('a');
+      layout.toggleFullscreen('a');
+      dispatch(layout.element, PanelEventType.Close, { panelId: 'a', slot: SlotName.LeftTop });
+      expect(layout.getState().fullscreenPanel).toBeNull();
+    });
+
+    it('exits fullscreen when panel is moved', () => {
+      layout = new FrameLayout(mount, makePanels());
+      layout.openPanel('a');
+      layout.toggleFullscreen('a');
+      layout.movePanel('a', SlotName.RightBottom);
+      expect(layout.getState().fullscreenPanel).toBeNull();
+    });
+
+    it('dispatches frame:fullscreen event from button click', () => {
+      layout = new FrameLayout(mount, makePanels());
+      layout.openPanel('a');
+      let detail: any = null;
+      layout.element.addEventListener(PanelEventType.Fullscreen, (e: Event) => {
+        detail = (e as CustomEvent).detail;
+      });
+      dispatch(layout.element, PanelEventType.Fullscreen, { panelId: 'a', slot: SlotName.LeftTop });
+      expect(detail).toEqual({ panelId: 'a', slot: SlotName.LeftTop });
+    });
+  });
+
+  describe('theme', () => {
+    it('getTheme returns obsidian by default', () => {
+      layout = new FrameLayout(mount, makePanels());
+      expect(layout.getTheme()).toBe('obsidian');
+    });
+
+    it('setTheme sets data-theme attribute', () => {
+      layout = new FrameLayout(mount, makePanels());
+      layout.setTheme('dracula');
+      expect(layout.element.getAttribute('data-theme')).toBe('dracula');
+    });
+
+    it('setTheme removes data-theme for obsidian', () => {
+      layout = new FrameLayout(mount, makePanels());
+      layout.setTheme('dracula');
+      layout.setTheme('obsidian');
+      expect(layout.element.getAttribute('data-theme')).toBeNull();
+    });
+
+    it('getTheme returns current theme', () => {
+      layout = new FrameLayout(mount, makePanels());
+      layout.setTheme('nord');
+      expect(layout.getTheme()).toBe('nord');
+    });
+
+    it('dispatches frame:theme event on change', () => {
+      layout = new FrameLayout(mount, makePanels());
+      let detail: any = null;
+      layout.element.addEventListener(ThemeEventType.Change, (e: Event) => {
+        detail = (e as CustomEvent).detail;
+      });
+      layout.setTheme('dracula');
+      expect(detail).toEqual({ theme: 'dracula', previous: 'obsidian' });
+    });
+
+    it('does not dispatch event when theme is unchanged', () => {
+      layout = new FrameLayout(mount, makePanels());
+      layout.setTheme('dracula');
+      let called = false;
+      layout.element.addEventListener(ThemeEventType.Change, () => { called = true; });
+      layout.setTheme('dracula');
+      expect(called).toBe(false);
+    });
+
+    it('accepts custom string themes', () => {
+      layout = new FrameLayout(mount, makePanels());
+      layout.setTheme('my-custom-theme');
+      expect(layout.getTheme()).toBe('my-custom-theme');
+      expect(layout.element.getAttribute('data-theme')).toBe('my-custom-theme');
+    });
+  });
+
+  describe('disableRail', () => {
+    it('removes rail element from DOM', () => {
+      layout = new FrameLayout(mount, makePanels());
+      layout.disableRail(DockEdge.Left);
+      expect(layout.element.querySelector('.frame-rail.left')).toBeNull();
+    });
+
+    it('removes dock element from DOM', () => {
+      layout = new FrameLayout(mount, makePanels());
+      layout.disableRail(DockEdge.Left);
+      expect(layout.element.querySelector('.frame-dock.left')).toBeNull();
+    });
+
+    it('isRailDisabled returns true after disable', () => {
+      layout = new FrameLayout(mount, makePanels());
+      layout.disableRail(DockEdge.Left);
+      expect(layout.isRailDisabled(DockEdge.Left)).toBe(true);
+    });
+
+    it('isRailDisabled returns false by default', () => {
+      layout = new FrameLayout(mount, makePanels());
+      expect(layout.isRailDisabled(DockEdge.Left)).toBe(false);
+    });
+
+    it('closes active panels in disabled rail', () => {
+      layout = new FrameLayout(mount, makePanels());
+      layout.openPanel('a');
+      layout.disableRail(DockEdge.Left);
+      expect(layout.getState().activePanel[SlotName.LeftTop]).toBeNull();
+      expect(layout.getState().activePanel[SlotName.LeftBottom]).toBeNull();
+    });
+
+    it('exits fullscreen when panel in disabled rail is fullscreen', () => {
+      layout = new FrameLayout(mount, makePanels());
+      layout.openPanel('a');
+      layout.toggleFullscreen('a');
+      layout.disableRail(DockEdge.Left);
+      expect(layout.getState().fullscreenPanel).toBeNull();
+    });
+
+    it('openPanel is a no-op for panel in disabled rail', () => {
+      layout = new FrameLayout(mount, makePanels());
+      layout.disableRail(DockEdge.Left);
+      const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      layout.openPanel('a');
+      expect(layout.getState().activePanel[SlotName.LeftTop]).toBeNull();
+      expect(spy).toHaveBeenCalledWith(expect.stringContaining('Cannot open panel'));
+      spy.mockRestore();
+    });
+
+    it('movePanel to disabled rail is a no-op', () => {
+      layout = new FrameLayout(mount, makePanels());
+      layout.disableRail(DockEdge.Right);
+      const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      layout.movePanel('a', SlotName.RightTop);
+      expect(layout.getState().panelSlot['a']).toBe(SlotName.LeftTop);
+      expect(spy).toHaveBeenCalledWith(expect.stringContaining('Cannot move panel'));
+      spy.mockRestore();
+    });
+
+    it('dispatches frame:rail-disabled event', () => {
+      layout = new FrameLayout(mount, makePanels());
+      let detail: any = null;
+      layout.element.addEventListener(RailDisabledEventType.Change, (e: Event) => {
+        detail = (e as CustomEvent).detail;
+      });
+      layout.disableRail(DockEdge.Left);
+      expect(detail).toEqual({ edge: DockEdge.Left, disabled: true });
+    });
+
+    it('is a no-op when already disabled', () => {
+      layout = new FrameLayout(mount, makePanels());
+      layout.disableRail(DockEdge.Left);
+      let called = false;
+      layout.element.addEventListener(RailDisabledEventType.Change, () => { called = true; });
+      layout.disableRail(DockEdge.Left);
+      expect(called).toBe(false);
+    });
+
+    it('auto-moves panels to target rail', () => {
+      layout = new FrameLayout(mount, makePanels());
+      layout.disableRail(DockEdge.Left, DockEdge.Right);
+      expect(layout.getState().panelSlot['a']).toBe(SlotName.RightTop);
+      expect(layout.getState().panelSlot['b']).toBe(SlotName.RightBottom);
+    });
+
+    it('errors when autoMoveTarget is also disabled', () => {
+      layout = new FrameLayout(mount, makePanels());
+      layout.disableRail(DockEdge.Right);
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      layout.disableRail(DockEdge.Left, DockEdge.Right);
+      expect(spy).toHaveBeenCalledWith(expect.stringContaining('Cannot auto-move'));
+      expect(layout.isRailDisabled(DockEdge.Left)).toBe(false);
+      spy.mockRestore();
+    });
+  });
+
+  describe('enableRail', () => {
+    it('restores rail element to DOM', () => {
+      layout = new FrameLayout(mount, makePanels());
+      layout.disableRail(DockEdge.Left);
+      layout.enableRail(DockEdge.Left);
+      expect(layout.element.querySelector('.frame-rail.left')).not.toBeNull();
+    });
+
+    it('restores dock element to DOM', () => {
+      layout = new FrameLayout(mount, makePanels());
+      layout.disableRail(DockEdge.Left);
+      layout.enableRail(DockEdge.Left);
+      expect(layout.element.querySelector('.frame-dock.left')).not.toBeNull();
+    });
+
+    it('isRailDisabled returns false after enable', () => {
+      layout = new FrameLayout(mount, makePanels());
+      layout.disableRail(DockEdge.Left);
+      layout.enableRail(DockEdge.Left);
+      expect(layout.isRailDisabled(DockEdge.Left)).toBe(false);
+    });
+
+    it('dispatches frame:rail-disabled event with disabled=false', () => {
+      layout = new FrameLayout(mount, makePanels());
+      layout.disableRail(DockEdge.Left);
+      let detail: any = null;
+      layout.element.addEventListener(RailDisabledEventType.Change, (e: Event) => {
+        detail = (e as CustomEvent).detail;
+      });
+      layout.enableRail(DockEdge.Left);
+      expect(detail).toEqual({ edge: DockEdge.Left, disabled: false });
+    });
+
+    it('is a no-op when rail is not disabled', () => {
+      layout = new FrameLayout(mount, makePanels());
+      let called = false;
+      layout.element.addEventListener(RailDisabledEventType.Change, () => { called = true; });
+      layout.enableRail(DockEdge.Left);
+      expect(called).toBe(false);
+    });
+
+    it('panels in re-enabled rail can be opened again', () => {
+      layout = new FrameLayout(mount, makePanels());
+      layout.disableRail(DockEdge.Left);
+      layout.enableRail(DockEdge.Left);
+      layout.openPanel('a');
+      expect(layout.getState().activePanel[SlotName.LeftTop]).toBe('a');
+    });
+  });
+
+  describe('rail disable via config', () => {
+    it('disables rail at init time', () => {
+      layout = new FrameLayout(mount, makePanels(), {
+        rails: { [DockEdge.Left]: { disabled: true } },
+      });
+      expect(layout.isRailDisabled(DockEdge.Left)).toBe(true);
+      expect(layout.element.querySelector('.frame-rail.left')).toBeNull();
+    });
+
+    it('auto-moves panels at init time', () => {
+      layout = new FrameLayout(mount, makePanels(), {
+        rails: { [DockEdge.Left]: { disabled: true, autoMoveTarget: DockEdge.Right } },
+      });
+      expect(layout.getState().panelSlot['a']).toBe(SlotName.RightTop);
+      expect(layout.getState().panelSlot['b']).toBe(SlotName.RightBottom);
     });
   });
 });

@@ -75,6 +75,68 @@ describe('Panel', () => {
     });
   });
 
+  describe('fullscreen button', () => {
+    it('renders fullscreen button by default', () => {
+      panel = new Panel(cfg);
+      expect(panel.element.querySelector('.panel-fullscreen-btn')).not.toBeNull();
+    });
+
+    it('does not render fullscreen button when fullscreenable=false', () => {
+      panel = new Panel({ ...cfg, fullscreenable: false });
+      expect(panel.element.querySelector('.panel-fullscreen-btn')).toBeNull();
+    });
+
+    it('fullscreen button is left of pin button in DOM order', () => {
+      panel = new Panel(cfg);
+      const header = panel.element.querySelector('.panel-header')!;
+      const children = Array.from(header.children);
+      const fullscreenIndex = children.findIndex(c => c.classList.contains('panel-fullscreen-btn'));
+      const pinIndex = children.findIndex(c => c.classList.contains('panel-pin'));
+      expect(fullscreenIndex).toBeLessThan(pinIndex);
+    });
+
+    it('dispatches PanelEventType.Fullscreen on click', () => {
+      panel = new Panel(cfg);
+      document.body.appendChild(panel.element);
+      let detail: any = null;
+      panel.element.addEventListener(PanelEventType.Fullscreen, (e: Event) => {
+        detail = (e as CustomEvent).detail;
+      });
+      (panel.element.querySelector('.panel-fullscreen-btn') as HTMLElement).click();
+      expect(detail).toEqual({ panelId: 'x', slot: SlotName.LeftTop });
+    });
+  });
+
+  describe('setFullscreen', () => {
+    it('adds panel-fullscreen class', () => {
+      panel = new Panel(cfg);
+      panel.setFullscreen(true);
+      expect(panel.element.classList.contains('panel-fullscreen')).toBe(true);
+    });
+
+    it('removes panel-fullscreen class', () => {
+      panel = new Panel(cfg);
+      panel.setFullscreen(true);
+      panel.setFullscreen(false);
+      expect(panel.element.classList.contains('panel-fullscreen')).toBe(false);
+    });
+
+    it('isFullscreen reflects state', () => {
+      panel = new Panel(cfg);
+      expect(panel.isFullscreen()).toBe(false);
+      panel.setFullscreen(true);
+      expect(panel.isFullscreen()).toBe(true);
+      panel.setFullscreen(false);
+      expect(panel.isFullscreen()).toBe(false);
+    });
+
+    it('updates aria-pressed on fullscreen button', () => {
+      panel = new Panel(cfg);
+      panel.setFullscreen(true);
+      expect(panel.element.querySelector('.panel-fullscreen-btn')?.getAttribute('aria-pressed')).toBe('true');
+    });
+  });
+
   describe('events', () => {
     it('close button dispatches PanelEventType.Close with correct detail', () => {
       panel = new Panel(cfg);
