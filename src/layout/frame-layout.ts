@@ -1,6 +1,6 @@
 import { DockEdge } from '../types/dock-edge.js';
 import type { LayoutState } from '../types/layout.js';
-import type { SlotName } from '../types/slot-name.js';
+import { SlotName } from '../types/slot-name.js';
 import type { FrameOptions } from '../types/frame-options.js';
 import type { StorageAdapter } from '../types/storage-adapter.js';
 import type { PanelConfig } from '../types/panel.js';
@@ -20,6 +20,8 @@ import { Rail } from '../rail/rail.js';
 import { Splitter } from '../splitter/splitter.js';
 import { Resizer } from '../resizer/resizer.js';
 import type { FullscreenRestore } from '../types/fullscreen-restore.js';
+import type { RailDisabledEventDetail } from '../types/rail-disabled-event-detail.js';
+import { RailDisabledEventType } from '../types/rail-disabled-event-type.js';
 import type { ThemeEventDetail } from '../types/theme-event-detail.js';
 import { ThemeEventType } from '../types/theme-event-type.js';
 import type { Theme } from '../types/theme.js';
@@ -41,6 +43,7 @@ export class FrameLayout {
   private readonly panelMap: Map<string, Panel> = new Map();
   private readonly railMap: Map<DockEdge, Rail> = new Map();
   private fullscreenRestore: FullscreenRestore | null = null;
+  private readonly disabledRails: Set<DockEdge> = new Set();
   private state: LayoutState;
 
   constructor(mount: HTMLElement, panels: PanelConfig[], options?: FrameOptions) {
@@ -83,6 +86,15 @@ export class FrameLayout {
     this.mountPanels();
     this.mountRails();
     this.apply(this.state);
+
+    if (options?.rails) {
+      for (const [edgeKey, railConfig] of Object.entries(options.rails)) {
+        const edge = Number(edgeKey) as DockEdge;
+        if (railConfig?.disabled) {
+          this.disableRail(edge, railConfig.autoMoveTarget);
+        }
+      }
+    }
 
     this.element.addEventListener(SplitterEventType.Change, this.onSplitterChange as EventListener);
     this.element.addEventListener(ResizerEventType.Change, this.onResizerChange as EventListener);
@@ -151,6 +163,10 @@ export class FrameLayout {
     if (!config) { return; }
     const { slot } = config;
     const edge = SLOT_EDGE[slot];
+    if (this.disabledRails.has(edge)) {
+      console.warn(`[frame] Cannot open panel "${id}" — rail "${EDGE_NAME[edge]}" is disabled`);
+      return;
+    }
     if (this.state.activePanel[slot] === id) { return; }
     const prev = this.state.activePanel[slot];
     if (prev) { this.panelMap.get(prev)?.setActive(false); }
@@ -187,11 +203,15 @@ export class FrameLayout {
     if (!config) { return; }
     const fromSlot = config.slot;
     if (fromSlot === toSlot) { return; }
+    const toEdge = SLOT_EDGE[toSlot];
+    if (this.disabledRails.has(toEdge)) {
+      console.warn(`[frame] Cannot move panel "${id}" to slot "${SlotName[toSlot]}" — rail "${EDGE_NAME[toEdge]}" is disabled`);
+      return;
+    }
     if (this.state.fullscreenPanel === id) {
       this.exitFullscreen();
     }
     const fromEdge = SLOT_EDGE[fromSlot];
-    const toEdge = SLOT_EDGE[toSlot];
     config.slot = toSlot;
     this.state.panelSlot[id] = toSlot;
     const panel = this.panelMap.get(id)!;
@@ -207,6 +227,86 @@ export class FrameLayout {
     this.apply(this.state);
     this.updateRails();
     this.save();
+  }
+
+  public disableRail(edge: DockEdge, autoMoveTarget?: DockEdge): void {
+    if (this.disabledRails.has(edge)) { return; }
+    if (autoMoveTarget !== undefined && this.disabledRails.has(autoMoveTarget)) {
+      console.error(`[frame] Cannot auto-move panels to rail "${EDGE_NAME[autoMoveTarget]}" — it is disabled`);
+      return;
+    }
+
+    const [slotA, slotB] = EDGE_SLOTS[edge];
+
+    for (const slot of [slotA, slotB]) {
+      const panelId = this.state.activePanel[slot];
+      if (panelId) {
+        if (this.state.fullscreenPanel === panelId) {
+          this.exitFullscreen();
+        }
+        this.panelMap.get(panelId)?.setActive(false);
+        this.state.activePanel[slot] = null;
+      }
+    }
+
+    if (autoMoveTarget !== undefined) {
+      const [targetSlotA, targetSlotB] = EDGE_SLOTS[autoMoveTarget];
+      const slotMapping: [SlotName, SlotName][] = [[slotA, targetSlotA], [slotB, targetSlotB]];
+      for (const [fromSlot, toSlot] of slotMapping) {
+        const panelsInSlot = this.panels.filter(p => p.slot === fromSlot);
+        for (const panelConfig of panelsInSlot) {
+          this.movePanelInternal(panelConfig.id, toSlot);
+        }
+      }
+    }
+
+    this.disabledRails.add(edge);
+    this.railElements[edge].remove();
+    this.docks[edge].remove();
+    this.apply(this.state);
+    this.updateRails();
+    this.save();
+
+    const detail: RailDisabledEventDetail = { edge, disabled: true };
+    this.element.dispatchEvent(new CustomEvent(RailDisabledEventType.Change, { detail, bubbles: true }));
+  }
+
+  public enableRail(edge: DockEdge): void {
+    if (!this.disabledRails.has(edge)) { return; }
+    this.disabledRails.delete(edge);
+    this.element.appendChild(this.railElements[edge]);
+    this.element.appendChild(this.docks[edge]);
+    this.apply(this.state);
+    this.updateRails();
+    this.save();
+
+    const detail: RailDisabledEventDetail = { edge, disabled: false };
+    this.element.dispatchEvent(new CustomEvent(RailDisabledEventType.Change, { detail, bubbles: true }));
+  }
+
+  public isRailDisabled(edge: DockEdge): boolean {
+    return this.disabledRails.has(edge);
+  }
+
+  private movePanelInternal(id: string, toSlot: SlotName): void {
+    const config = this.panels.find(p => p.id === id);
+    if (!config) { return; }
+    const fromSlot = config.slot;
+    if (fromSlot === toSlot) { return; }
+    const fromEdge = SLOT_EDGE[fromSlot];
+    const toEdge = SLOT_EDGE[toSlot];
+    config.slot = toSlot;
+    this.state.panelSlot[id] = toSlot;
+    const panel = this.panelMap.get(id)!;
+    this.slots[toSlot]!.appendChild(panel.element);
+    if (this.state.activePanel[fromSlot] === id) {
+      this.state.activePanel[fromSlot] = null;
+      panel.setActive(false);
+    }
+    this.state.slotHasPinned[fromSlot] = this.panels.some(p => p.slot === fromSlot && p.pinned);
+    this.state.slotHasPinned[toSlot] = this.panels.some(p => p.slot === toSlot && p.pinned);
+    this.railMap.get(fromEdge)?.removePanel(id);
+    this.railMap.get(toEdge)?.addPanel(config);
   }
 
   private buildInitialState(animated: boolean): LayoutState {

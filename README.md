@@ -53,6 +53,7 @@ const layout = new FrameLayout(document.getElementById('app')!, panels, {
 | `animated` | `boolean` | Enable CSS transitions |
 | `transition` | `TransitionConfig` | Custom `{ duration, easing }` |
 | `storage` | `StorageAdapter` | Persist layout state |
+| `rails` | `Partial<Record<DockEdge, RailConfig>>` | Per-rail configuration |
 
 #### Instance properties and methods
 
@@ -69,6 +70,9 @@ const layout = new FrameLayout(document.getElementById('app')!, panels, {
 | `closePanel(id)` | Deactivate a panel |
 | `toggleFullscreen(id)` | Toggle a panel to fullscreen over the frame |
 | `movePanel(id, slot)` | Move a panel to a different `SlotName` |
+| `disableRail(edge, autoMoveTarget?)` | Disable a rail and its dock |
+| `enableRail(edge)` | Re-enable a disabled rail |
+| `isRailDisabled(edge)` | Check if a rail is disabled |
 | `destroy()` | Remove the layout from the DOM and clean up |
 
 ### `PanelConfig`
@@ -93,6 +97,21 @@ enum SlotName {
   BottomLeft, BottomRight,
 }
 ```
+
+### `DockEdge`
+
+```ts
+enum DockEdge {
+  Left, Right, Top, Bottom,
+}
+```
+
+### `RailConfig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `disabled` | `boolean` | Disable this rail (default `false`) |
+| `autoMoveTarget` | `DockEdge` | Move panels to this edge when disabling |
 
 ### `LocalStorageAdapter`
 
@@ -125,6 +144,7 @@ All events are `CustomEvent`s dispatched on the frame `element` with `bubbles: t
 | `frame:rail-move` | `{ panelId, toSlot, beforePanelId }` | Panel moved via rail drag |
 | `frame:splitter-change` | `{ edge, ratio }` | Splitter position changed |
 | `frame:resizer-change` | `{ edge, size }` | Dock resized |
+| `frame:rail-disabled` | `{ edge, disabled }` | Rail enabled or disabled |
 | `frame:overlay-close` | `{ edge }` | Click outside unpinned dock |
 
 ## Theming
