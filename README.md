@@ -59,11 +59,15 @@ const layout = new FrameLayout(document.getElementById('app')!, panels, {
 | Member | Description |
 |--------|-------------|
 | `element` | The root `HTMLElement` |
+| `getStage()` | Returns the central content area `HTMLElement` |
 | `getState()` | Returns the current `LayoutState` |
+| `getTheme()` | Returns the current `Theme \| string` |
+| `setTheme(theme)` | Set theme by name (`Theme` or custom string) |
 | `setWidescreen(enabled)` | Toggle widescreen mode |
 | `setAnimated(enabled)` | Toggle animations at runtime |
 | `openPanel(id)` | Activate a panel |
 | `closePanel(id)` | Deactivate a panel |
+| `toggleFullscreen(id)` | Toggle a panel to fullscreen over the frame |
 | `movePanel(id, slot)` | Move a panel to a different `SlotName` |
 | `destroy()` | Remove the layout from the DOM and clean up |
 
@@ -75,6 +79,7 @@ const layout = new FrameLayout(document.getElementById('app')!, panels, {
 | `title` | `string` | Display title |
 | `slot` | `SlotName` | Initial slot position |
 | `pinned` | `boolean` | Keep panel open when dock is inactive |
+| `fullscreenable` | `boolean` | Show fullscreen button (default `true`) |
 | `icon` | `PanelIcon` | Optional icon (`HTMLElement`, SVG string, or factory) |
 | `content` | `HTMLElement` | Optional panel body element |
 
@@ -106,9 +111,34 @@ interface StorageAdapter {
 }
 ```
 
+## Events
+
+All events are `CustomEvent`s dispatched on the frame `element` with `bubbles: true`.
+
+| Event | Detail | Description |
+|-------|--------|-------------|
+| `frame:theme` | `{ theme, previous }` | Theme changed via `setTheme()` |
+| `frame:fullscreen` | `{ panelId, slot }` | Panel fullscreen toggled |
+| `frame:pin` | `{ panelId, slot }` | Panel pin toggled |
+| `frame:close` | `{ panelId, slot }` | Panel closed |
+| `frame:rail-click` | `{ panelId, slot }` | Rail icon clicked |
+| `frame:rail-move` | `{ panelId, toSlot, beforePanelId }` | Panel moved via rail drag |
+| `frame:splitter-change` | `{ edge, ratio }` | Splitter position changed |
+| `frame:resizer-change` | `{ edge, size }` | Dock resized |
+| `frame:overlay-close` | `{ edge }` | Click outside unpinned dock |
+
 ## Theming
 
-Set `data-theme` on the mount element to one of:
+Set `data-theme` on the mount element or use `setTheme()` / `getTheme()`:
+
+```ts
+layout.setTheme('dracula');
+layout.element.addEventListener('frame:theme', (e) => {
+  console.log(e.detail.previous, '->', e.detail.theme);
+});
+```
+
+Available themes:
 
 - `obsidian` (default; omit `data-theme` or set it to empty)
 - `light`

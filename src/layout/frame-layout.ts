@@ -19,18 +19,18 @@ import { Panel } from '../panel/panel.js';
 import { Rail } from '../rail/rail.js';
 import { Splitter } from '../splitter/splitter.js';
 import { Resizer } from '../resizer/resizer.js';
+import type { FullscreenRestore } from '../types/fullscreen-restore.js';
+import type { ThemeEventDetail } from '../types/theme-event-detail.js';
+import { ThemeEventType } from '../types/theme-event-type.js';
+import type { Theme } from '../types/theme.js';
 import { EDGE_NAME, EDGE_SLOTS, EDGE_SPLITTER_ORIENTATION, EDGES, OPPOSITE_EDGE, SLOT_EDGE, DOCK_DEFAULT_SIZE, DOCK_MIN_SIZE } from './constants.js';
 import './frame-layout.scss';
 import '../themes/frame-theme.scss';
 
 export class FrameLayout {
-  readonly element: HTMLElement;
-  private readonly _stage: HTMLElement;
-
-  get stage(): HTMLElement {
-    return this._stage;
-  }
-  private readonly railEls: Record<DockEdge, HTMLElement>;
+  public readonly element: HTMLElement;
+  private readonly stage: HTMLElement;
+  private readonly railElements: Record<DockEdge, HTMLElement>;
   private readonly docks: Record<DockEdge, HTMLElement>;
   private readonly slots: Partial<Record<SlotName, HTMLElement>>;
   private readonly splitters: Record<DockEdge, Splitter>;
@@ -40,6 +40,7 @@ export class FrameLayout {
   private readonly panels: PanelConfig[];
   private readonly panelMap: Map<string, Panel> = new Map();
   private readonly railMap: Map<DockEdge, Rail> = new Map();
+  private fullscreenRestore: FullscreenRestore | null = null;
   private state: LayoutState;
 
   constructor(mount: HTMLElement, panels: PanelConfig[], options?: FrameOptions) {
@@ -47,10 +48,10 @@ export class FrameLayout {
     this.slots = {};
     this.splitters = {} as Record<DockEdge, Splitter>;
     this.resizers = {} as Record<DockEdge, Resizer>;
-    this.railEls = this.buildRailElements();
+    this.railElements = this.buildRailElements();
     this.docks = this.buildDocks();
-    this._stage = document.createElement('div');
-    this._stage.className = 'frame-stage';
+    this.stage = document.createElement('div');
+    this.stage.className = 'frame-stage';
     this.element = document.createElement('div');
     this.element.className = 'frame';
     this.buildDOM();
@@ -89,40 +90,63 @@ export class FrameLayout {
     this.element.addEventListener(RailEventType.Move, this.onRailMove as EventListener);
     this.element.addEventListener(PanelEventType.Close, this.onPanelClose as EventListener);
     this.element.addEventListener(PanelEventType.Pin, this.onPanelPin as EventListener);
+    this.element.addEventListener(PanelEventType.Fullscreen, this.onPanelFullscreen as EventListener);
     this.element.addEventListener(OverlayEventType.Close, this.onOverlayClose as EventListener);
     document.addEventListener('pointerdown', this.onPointerDown);
   }
 
-  destroy(): void {
+  public destroy(): void {
+    this.exitFullscreen();
     this.element.removeEventListener(SplitterEventType.Change, this.onSplitterChange as EventListener);
     this.element.removeEventListener(ResizerEventType.Change, this.onResizerChange as EventListener);
     this.element.removeEventListener(RailEventType.Click, this.onRailClick as EventListener);
     this.element.removeEventListener(RailEventType.Move, this.onRailMove as EventListener);
     this.element.removeEventListener(PanelEventType.Close, this.onPanelClose as EventListener);
     this.element.removeEventListener(PanelEventType.Pin, this.onPanelPin as EventListener);
+    this.element.removeEventListener(PanelEventType.Fullscreen, this.onPanelFullscreen as EventListener);
     this.element.removeEventListener(OverlayEventType.Close, this.onOverlayClose as EventListener);
     document.removeEventListener('pointerdown', this.onPointerDown);
     for (const rail of this.railMap.values()) { rail.destroy(); }
     this.element.remove();
   }
 
-  getState(): LayoutState {
+  public getTheme(): Theme | string {
+    return this.element.getAttribute('data-theme') || 'obsidian';
+  }
+
+  public setTheme(theme: Theme | (string & {})): void {
+    const previous = this.getTheme();
+    if (theme === previous) { return; }
+    if (theme === 'obsidian') {
+      this.element.removeAttribute('data-theme');
+    } else {
+      this.element.setAttribute('data-theme', theme);
+    }
+    const detail: ThemeEventDetail = { theme, previous };
+    this.element.dispatchEvent(new CustomEvent(ThemeEventType.Change, { detail, bubbles: true }));
+  }
+
+  public getStage(): HTMLElement {
+    return this.stage;
+  }
+
+  public getState(): LayoutState {
     return this.state;
   }
 
-  setWidescreen(enabled: boolean): void {
+  public setWidescreen(enabled: boolean): void {
     this.state.widescreen = enabled;
     this.element.classList.toggle('widescreen', enabled);
     this.save();
   }
 
-  setAnimated(enabled: boolean): void {
+  public setAnimated(enabled: boolean): void {
     this.state.animated = enabled;
     this.element.classList.toggle('animated', enabled);
     this.save();
   }
 
-  openPanel(id: string): void {
+  public openPanel(id: string): void {
     const config = this.panels.find(p => p.id === id);
     if (!config) { return; }
     const { slot } = config;
@@ -138,7 +162,7 @@ export class FrameLayout {
     this.save();
   }
 
-  closePanel(id: string): void {
+  public closePanel(id: string): void {
     const config = this.panels.find(p => p.id === id);
     if (!config) { return; }
     const { slot } = config;
@@ -150,11 +174,22 @@ export class FrameLayout {
     this.save();
   }
 
-  movePanel(id: string, toSlot: SlotName): void {
+  public toggleFullscreen(id: string): void {
+    if (this.state.fullscreenPanel === id) {
+      this.exitFullscreen();
+    } else {
+      this.enterFullscreen(id);
+    }
+  }
+
+  public movePanel(id: string, toSlot: SlotName): void {
     const config = this.panels.find(p => p.id === id);
     if (!config) { return; }
     const fromSlot = config.slot;
     if (fromSlot === toSlot) { return; }
+    if (this.state.fullscreenPanel === id) {
+      this.exitFullscreen();
+    }
     const fromEdge = SLOT_EDGE[fromSlot];
     const toEdge = SLOT_EDGE[toSlot];
     config.slot = toSlot;
@@ -205,6 +240,7 @@ export class FrameLayout {
       slotHasPinned,
       panelPinned,
       panelSlot,
+      fullscreenPanel: null,
       widescreen: false,
       animated,
     };
@@ -224,7 +260,7 @@ export class FrameLayout {
     for (const edge of EDGES) {
       const [slotA, slotB] = EDGE_SLOTS[edge];
       const edgePanels = this.panels.filter(p => p.slot === slotA || p.slot === slotB);
-      const rail = new Rail(this.railEls[edge], edge, edgePanels);
+      const rail = new Rail(this.railElements[edge], edge, edgePanels);
       rail.update(this.state.activePanel);
       this.railMap.set(edge, rail);
     }
@@ -298,14 +334,14 @@ export class FrameLayout {
     this.state.panelSlot[panelId] = toSlot;
 
     const panel = this.panelMap.get(panelId)!;
-    const targetSlotEl = this.slots[toSlot]!;
+    const targetSlotElement = this.slots[toSlot]!;
 
     if (beforePanelId) {
-      const beforeEl = this.panelMap.get(beforePanelId)?.element;
-      if (beforeEl) { targetSlotEl.insertBefore(panel.element, beforeEl); }
-      else { targetSlotEl.appendChild(panel.element); }
+      const beforeElement = this.panelMap.get(beforePanelId)?.element;
+      if (beforeElement) { targetSlotElement.insertBefore(panel.element, beforeElement); }
+      else { targetSlotElement.appendChild(panel.element); }
     } else {
-      targetSlotEl.appendChild(panel.element);
+      targetSlotElement.appendChild(panel.element);
     }
 
     if (this.state.activePanel[fromSlot] === panelId) {
@@ -326,6 +362,9 @@ export class FrameLayout {
   private onPanelClose = (e: CustomEvent<PanelEventDetail>): void => {
     const { panelId, slot } = e.detail;
     if (this.state.activePanel[slot] !== panelId) { return; }
+    if (this.state.fullscreenPanel === panelId) {
+      this.exitFullscreen();
+    }
     this.panelMap.get(panelId)?.setActive(false);
     this.state.activePanel[slot] = null;
     this.apply(this.state);
@@ -342,6 +381,51 @@ export class FrameLayout {
     this.apply(this.state);
     this.save();
   };
+
+  private onPanelFullscreen = (e: CustomEvent<PanelEventDetail>): void => {
+    const { panelId } = e.detail;
+    if (this.state.fullscreenPanel === panelId) {
+      this.exitFullscreen();
+    } else {
+      this.enterFullscreen(panelId);
+    }
+  };
+
+  private enterFullscreen(panelId: string): void {
+    if (this.state.fullscreenPanel) {
+      this.exitFullscreen();
+    }
+    const panel = this.panelMap.get(panelId);
+    if (!panel) { return; }
+    const parentElement = panel.element.parentElement;
+    if (!parentElement) { return; }
+    this.fullscreenRestore = {
+      slotElement: parentElement,
+      nextSibling: panel.element.nextSibling,
+    };
+    this.element.appendChild(panel.element);
+    panel.setFullscreen(true);
+    this.state.fullscreenPanel = panelId;
+    this.save();
+  }
+
+  private exitFullscreen(): void {
+    const panelId = this.state.fullscreenPanel;
+    if (!panelId) { return; }
+    const panel = this.panelMap.get(panelId);
+    if (panel && this.fullscreenRestore) {
+      const { slotElement, nextSibling } = this.fullscreenRestore;
+      if (nextSibling) {
+        slotElement.insertBefore(panel.element, nextSibling);
+      } else {
+        slotElement.appendChild(panel.element);
+      }
+      panel.setFullscreen(false);
+    }
+    this.fullscreenRestore = null;
+    this.state.fullscreenPanel = null;
+    this.save();
+  }
 
   private onOverlayClose = (e: CustomEvent<OverlayEventDetail>): void => {
     const [slotA, slotB] = EDGE_SLOTS[e.detail.edge];
@@ -371,7 +455,7 @@ export class FrameLayout {
     const target = e.target as HTMLElement;
     for (const edge of EDGES) {
       if (!this.dockOpen[edge]) { continue; }
-      if (!this.docks[edge].contains(target) && !this.railEls[edge].contains(target)) {
+      if (!this.docks[edge].contains(target) && !this.railElements[edge].contains(target)) {
         const detail: OverlayEventDetail = { edge };
         this.element.dispatchEvent(new CustomEvent(OverlayEventType.Close, { detail, bubbles: true }));
       }
@@ -381,9 +465,9 @@ export class FrameLayout {
   private buildRailElements(): Record<DockEdge, HTMLElement> {
     const map = {} as Record<DockEdge, HTMLElement>;
     for (const edge of EDGES) {
-      const el = document.createElement('div');
-      el.className = `frame-rail ${EDGE_NAME[edge]}`;
-      map[edge] = el;
+      const rail = document.createElement('div');
+      rail.className = `frame-rail ${EDGE_NAME[edge]}`;
+      map[edge] = rail;
     }
     return map;
   }
@@ -394,10 +478,10 @@ export class FrameLayout {
       const dock = document.createElement('div');
       dock.className = `frame-dock ${EDGE_NAME[edge]}`;
       const [slotA, slotB] = EDGE_SLOTS[edge];
-      const slotAEl = document.createElement('div');
-      slotAEl.className = 'dock-slot';
-      const slotBEl = document.createElement('div');
-      slotBEl.className = 'dock-slot';
+      const slotAElement = document.createElement('div');
+      slotAElement.className = 'dock-slot';
+      const slotBElement = document.createElement('div');
+      slotBElement.className = 'dock-slot';
 
       const isVertical = edge === DockEdge.Left || edge === DockEdge.Right;
       const oppositeEdge = OPPOSITE_EDGE[edge];
@@ -418,14 +502,14 @@ export class FrameLayout {
       const splitter = new Splitter(edge, EDGE_SPLITTER_ORIENTATION[edge]);
       const resizer = new Resizer(edge, DOCK_MIN_SIZE, getMaxSize);
 
-      this.slots[slotA] = slotAEl;
-      this.slots[slotB] = slotBEl;
+      this.slots[slotA] = slotAElement;
+      this.slots[slotB] = slotBElement;
       this.splitters[edge] = splitter;
       this.resizers[edge] = resizer;
 
-      dock.appendChild(slotAEl);
+      dock.appendChild(slotAElement);
       dock.appendChild(splitter.element);
-      dock.appendChild(slotBEl);
+      dock.appendChild(slotBElement);
       dock.appendChild(resizer.element);
       map[edge] = dock;
     }
@@ -433,15 +517,15 @@ export class FrameLayout {
   }
 
   private buildDOM(): void {
-    this.element.appendChild(this.railEls[DockEdge.Top]);
+    this.element.appendChild(this.railElements[DockEdge.Top]);
     this.element.appendChild(this.docks[DockEdge.Top]);
-    this.element.appendChild(this.railEls[DockEdge.Left]);
+    this.element.appendChild(this.railElements[DockEdge.Left]);
     this.element.appendChild(this.docks[DockEdge.Left]);
-    this.element.appendChild(this._stage);
+    this.element.appendChild(this.stage);
     this.element.appendChild(this.docks[DockEdge.Right]);
-    this.element.appendChild(this.railEls[DockEdge.Right]);
+    this.element.appendChild(this.railElements[DockEdge.Right]);
     this.element.appendChild(this.docks[DockEdge.Bottom]);
-    this.element.appendChild(this.railEls[DockEdge.Bottom]);
+    this.element.appendChild(this.railElements[DockEdge.Bottom]);
   }
 
   private apply(state: LayoutState): void {
@@ -461,17 +545,17 @@ export class FrameLayout {
       dock.style[isVertical ? 'width' : 'height'] = anyOpen ? `${size}px` : '0';
       dock.style[isVertical ? 'height' : 'width'] = '';
 
-      const slotAEl = this.slots[slotA]!;
-      const slotBEl = this.slots[slotB]!;
-      slotAEl.classList.toggle('hidden', !aOpen);
-      slotBEl.classList.toggle('hidden', !bOpen);
+      const slotAElement = this.slots[slotA]!;
+      const slotBElement = this.slots[slotB]!;
+      slotAElement.classList.toggle('hidden', !aOpen);
+      slotBElement.classList.toggle('hidden', !bOpen);
 
       if (aOpen && bOpen) {
-        slotAEl.style.flex = `${splitRatio}`;
-        slotBEl.style.flex = `${1 - splitRatio}`;
+        slotAElement.style.flex = `${splitRatio}`;
+        slotBElement.style.flex = `${1 - splitRatio}`;
       } else {
-        slotAEl.style.flex = '';
-        slotBEl.style.flex = '';
+        slotAElement.style.flex = '';
+        slotBElement.style.flex = '';
       }
 
       this.splitters[edge].setVisible(aOpen && bOpen);

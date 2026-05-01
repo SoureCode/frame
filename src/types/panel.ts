@@ -6,6 +6,7 @@ export interface PanelConfig {
   title: string;
   slot: SlotName;
   pinned: boolean;
+  fullscreenable?: boolean;
   icon?: PanelIcon;
   content?: HTMLElement;
 }

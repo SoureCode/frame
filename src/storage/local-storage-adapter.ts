@@ -4,7 +4,7 @@ import type { StorageAdapter } from '../types/storage-adapter.js';
 export class LocalStorageAdapter implements StorageAdapter {
   constructor(private readonly key: string) {}
 
-  load(): LayoutState | null {
+  public load(): LayoutState | null {
     try {
       const raw = localStorage.getItem(this.key);
       if (!raw) { return null; }
@@ -15,7 +15,7 @@ export class LocalStorageAdapter implements StorageAdapter {
     }
   }
 
-  save(state: LayoutState): void {
+  public save(state: LayoutState): void {
     try {
       localStorage.setItem(this.key, JSON.stringify(state));
     } catch (e) {

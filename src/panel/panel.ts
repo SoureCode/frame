@@ -1,13 +1,15 @@
 import type { PanelConfig } from '../types/panel.js';
 import type { PanelEventDetail } from '../types/panel-event-detail.js';
 import { PanelEventType } from '../types/panel-event-type.js';
-import { PIN_ICON, CLOSE_ICON } from './icons.js';
+import { PIN_ICON, CLOSE_ICON, FULLSCREEN_ICON, FULLSCREEN_EXIT_ICON } from './icons.js';
 import './panel.scss';
 
 export class Panel {
-  readonly element: HTMLElement;
-  readonly content: HTMLElement;
-  private readonly pinBtn: HTMLElement;
+  public readonly element: HTMLElement;
+  public readonly content: HTMLElement;
+  private readonly pinButton: HTMLElement;
+  private readonly fullscreenButton: HTMLElement | null;
+  private fullscreen = false;
 
   constructor(private readonly config: PanelConfig) {
     this.content = document.createElement('div');
@@ -15,20 +17,39 @@ export class Panel {
     if (config.content) {
       this.content.appendChild(config.content);
     }
-    this.pinBtn = this.buildPinBtn();
+    this.pinButton = this.buildPinButton();
+    this.fullscreenButton = config.fullscreenable !== false ? this.buildFullscreenButton() : null;
     this.element = this.build();
   }
 
-  setActive(active: boolean): void {
+  public setActive(active: boolean): void {
     this.element.classList.toggle('active', active);
   }
 
-  setPinned(pinned: boolean): void {
-    this.pinBtn.classList.toggle('pinned', pinned);
-    this.pinBtn.setAttribute('aria-pressed', String(pinned));
+  public setPinned(pinned: boolean): void {
+    this.pinButton.classList.toggle('pinned', pinned);
+    this.pinButton.setAttribute('aria-pressed', String(pinned));
   }
 
-  private buildPinBtn(): HTMLElement {
+  public isFullscreen(): boolean {
+    return this.fullscreen;
+  }
+
+  public setFullscreen(active: boolean): void {
+    this.fullscreen = active;
+    this.element.classList.toggle('panel-fullscreen', active);
+    if (this.fullscreenButton) {
+      this.fullscreenButton.innerHTML = active ? FULLSCREEN_EXIT_ICON : FULLSCREEN_ICON;
+      this.fullscreenButton.setAttribute('aria-pressed', String(active));
+      this.fullscreenButton.setAttribute('aria-label', active ? 'Exit fullscreen' : 'Fullscreen panel');
+    }
+  }
+
+  public toggleFullscreen(): void {
+    this.dispatch(PanelEventType.Fullscreen);
+  }
+
+  private buildPinButton(): HTMLElement {
     const pin = document.createElement('button');
     pin.className = 'panel-pin';
     pin.type = 'button';
@@ -39,9 +60,20 @@ export class Panel {
     return pin;
   }
 
+  private buildFullscreenButton(): HTMLElement {
+    const button = document.createElement('button');
+    button.className = 'panel-fullscreen-btn';
+    button.type = 'button';
+    button.setAttribute('aria-label', 'Fullscreen panel');
+    button.setAttribute('aria-pressed', 'false');
+    button.innerHTML = FULLSCREEN_ICON;
+    button.addEventListener('click', () => this.dispatch(PanelEventType.Fullscreen));
+    return button;
+  }
+
   private build(): HTMLElement {
-    const el = document.createElement('div');
-    el.className = 'panel';
+    const panel = document.createElement('div');
+    panel.className = 'panel';
 
     const header = document.createElement('div');
     header.className = 'panel-header';
@@ -50,20 +82,23 @@ export class Panel {
     title.className = 'panel-title';
     title.textContent = this.config.title;
 
-    const close = document.createElement('button');
-    close.className = 'panel-close';
-    close.type = 'button';
-    close.setAttribute('aria-label', 'Close panel');
-    close.innerHTML = CLOSE_ICON;
-    close.addEventListener('click', () => this.dispatch(PanelEventType.Close));
+    const closeButton = document.createElement('button');
+    closeButton.className = 'panel-close';
+    closeButton.type = 'button';
+    closeButton.setAttribute('aria-label', 'Close panel');
+    closeButton.innerHTML = CLOSE_ICON;
+    closeButton.addEventListener('click', () => this.dispatch(PanelEventType.Close));
 
     header.appendChild(title);
-    header.appendChild(this.pinBtn);
-    header.appendChild(close);
-    el.appendChild(header);
-    el.appendChild(this.content);
+    if (this.fullscreenButton) {
+      header.appendChild(this.fullscreenButton);
+    }
+    header.appendChild(this.pinButton);
+    header.appendChild(closeButton);
+    panel.appendChild(header);
+    panel.appendChild(this.content);
 
-    return el;
+    return panel;
   }
 
   private dispatch(type: PanelEventType): void {

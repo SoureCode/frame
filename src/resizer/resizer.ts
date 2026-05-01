@@ -5,7 +5,7 @@ import { EDGE_NAME, DOCK_MIN_SIZE, DOCK_SNAP_THRESHOLD } from '../layout/constan
 import './resizer.scss';
 
 export class Resizer {
-  readonly element: HTMLElement;
+  public readonly element: HTMLElement;
   private fixedEdge: number = 0;
   private dynamicMax: number = 600;
   private pendingSize: number = 0;

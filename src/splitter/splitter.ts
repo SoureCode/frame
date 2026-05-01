@@ -6,7 +6,7 @@ import { SPLITTER_MIN_SIZE } from '../layout/constants.js';
 import './splitter.scss';
 
 export class Splitter {
-  readonly element: HTMLElement;
+  public readonly element: HTMLElement;
   private containerRect: DOMRect | null = null;
   private minSizeA: number = SPLITTER_MIN_SIZE;
   private minSizeB: number = SPLITTER_MIN_SIZE;
@@ -24,7 +24,7 @@ export class Splitter {
     this.element.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
   }
 
-  setVisible(visible: boolean): void {
+  public setVisible(visible: boolean): void {
     this.element.classList.toggle('hidden', !visible);
   }
 
@@ -34,7 +34,7 @@ export class Splitter {
     }
 
     const panel = Array.from(slot.children).find(
-      el => !el.classList.contains('hidden'),
+      child => !child.classList.contains('hidden'),
     ) as HTMLElement | undefined;
 
     if (!panel) {
@@ -52,9 +52,9 @@ export class Splitter {
 
     let fixedWidth = 0;
     for (const child of header.children) {
-      const el = child as HTMLElement;
-      if (parseFloat(getComputedStyle(el).flexGrow) === 0) {
-        fixedWidth += el.offsetWidth;
+      const element = child as HTMLElement;
+      if (parseFloat(getComputedStyle(element).flexGrow) === 0) {
+        fixedWidth += element.offsetWidth;
       }
     }
 

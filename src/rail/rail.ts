@@ -37,16 +37,16 @@ export class Rail {
   }
 
   private static clearDropZones(): void {
-    for (const el of document.querySelectorAll('.rail-indicator')) {
-      el.remove();
+    for (const indicator of document.querySelectorAll('.rail-indicator')) {
+      indicator.remove();
     }
     Rail.activeDropSlot = null;
   }
 
   private static makeIndicator(): HTMLElement {
-    const el = document.createElement('div');
-    el.className = 'rail-placeholder rail-indicator';
-    return el;
+    const indicator = document.createElement('div');
+    indicator.className = 'rail-placeholder rail-indicator';
+    return indicator;
   }
 
   private readonly slots: [SlotName, SlotName];
@@ -57,7 +57,7 @@ export class Rail {
   private readonly iconId: Map<HTMLElement, string> = new Map();
 
   constructor(
-    readonly element: HTMLElement,
+    public readonly element: HTMLElement,
     edge: DockEdge,
     panels: PanelConfig[],
   ) {
@@ -69,14 +69,14 @@ export class Rail {
     this.element.addEventListener('drop', this.onDrop);
   }
 
-  destroy(): void {
+  public destroy(): void {
     this.element.removeEventListener('dragover', this.onDragOver);
     this.element.removeEventListener('drop', this.onDrop);
     const idx = Rail.instances.indexOf(this);
     if (idx !== -1) { Rail.instances.splice(idx, 1); }
   }
 
-  removePanel(panelId: string): void {
+  public removePanel(panelId: string): void {
     const icon = this.icons.get(panelId);
     if (!icon) { return; }
     icon.remove();
@@ -85,20 +85,20 @@ export class Rail {
     this.iconId.delete(icon);
   }
 
-  addPanel(panel: PanelConfig): void {
-    for (const [halfEl, slot] of this.halfSlot) {
+  public addPanel(panel: PanelConfig): void {
+    for (const [halfElement, slot] of this.halfSlot) {
       if (slot === panel.slot) {
         const icon = this.buildIcon(panel);
         this.icons.set(panel.id, icon);
         this.iconSlot.set(panel.id, slot);
         this.iconId.set(icon, panel.id);
-        halfEl.appendChild(icon);
+        halfElement.appendChild(icon);
         break;
       }
     }
   }
 
-  update(activePanel: Record<SlotName, string | null>): void {
+  public update(activePanel: Record<SlotName, string | null>): void {
     for (const slot of this.slots) {
       const activePanelId = activePanel[slot];
 
@@ -136,44 +136,44 @@ export class Rail {
   }
 
   private buildIcon(panel: PanelConfig): HTMLElement {
-    const btn = document.createElement('button');
-    btn.className = 'rail-icon';
-    btn.type = 'button';
-    btn.title = panel.title;
-    btn.setAttribute('aria-label', panel.title);
-    btn.setAttribute('aria-pressed', 'false');
-    btn.draggable = true;
+    const button = document.createElement('button');
+    button.className = 'rail-icon';
+    button.type = 'button';
+    button.title = panel.title;
+    button.setAttribute('aria-label', panel.title);
+    button.setAttribute('aria-pressed', 'false');
+    button.draggable = true;
 
-    this.applyIconContent(btn, panel.icon, panel.title);
+    this.applyIconContent(button, panel.icon, panel.title);
 
-    btn.addEventListener('click', () => {
+    button.addEventListener('click', () => {
       const detail: RailEventDetail = { panelId: panel.id, slot: panel.slot };
       this.element.dispatchEvent(new CustomEvent(RailEventType.Click, { detail, bubbles: true }));
     });
 
-    btn.addEventListener('dragstart', (e) => {
+    button.addEventListener('dragstart', (e) => {
       const placeholder = document.createElement('div');
       placeholder.className = 'rail-placeholder';
-      Rail.activeDrag = { panelId: panel.id, icon: btn, placeholder };
+      Rail.activeDrag = { panelId: panel.id, icon: button, placeholder };
       e.dataTransfer!.effectAllowed = 'move';
       e.dataTransfer!.setData('text/plain', panel.id);
       requestAnimationFrame(() => {
-        btn.parentElement!.insertBefore(placeholder, btn);
-        btn.style.display = 'none';
+        button.parentElement!.insertBefore(placeholder, button);
+        button.style.display = 'none';
         Rail.initDropZones();
       });
     });
 
-    btn.addEventListener('dragend', () => {
-      if (Rail.activeDrag?.icon === btn) {
+    button.addEventListener('dragend', () => {
+      if (Rail.activeDrag?.icon === button) {
         Rail.activeDrag.placeholder.remove();
         Rail.activeDrag = null;
       }
-      btn.style.display = '';
+      button.style.display = '';
       Rail.clearDropZones();
     });
 
-    return btn;
+    return button;
   }
 
   private onDragOver = (e: DragEvent): void => {
@@ -249,30 +249,30 @@ export class Rail {
     Rail.clearDropZones();
   };
 
-  private applyIconContent(btn: HTMLElement, icon: PanelIcon | undefined, title: string): void {
+  private applyIconContent(button: HTMLElement, icon: PanelIcon | undefined, title: string): void {
     if (!icon) {
-      btn.textContent = title[0].toUpperCase();
+      button.textContent = title[0].toUpperCase();
       return;
     }
     if (typeof icon === 'string') {
       const doc = new DOMParser().parseFromString(icon, 'image/svg+xml');
       const svg = doc.querySelector('svg');
       if (svg) {
-        for (const el of [svg, ...Array.from(svg.querySelectorAll('*'))]) {
-          for (const attr of Array.from(el.attributes)) {
-            if (attr.name.startsWith('on')) { el.removeAttribute(attr.name); }
+        for (const node of [svg, ...Array.from(svg.querySelectorAll('*'))]) {
+          for (const attr of Array.from(node.attributes)) {
+            if (attr.name.startsWith('on')) { node.removeAttribute(attr.name); }
           }
         }
-        btn.appendChild(document.adoptNode(svg));
+        button.appendChild(document.adoptNode(svg));
       } else {
-        btn.textContent = title[0].toUpperCase();
+        button.textContent = title[0].toUpperCase();
       }
       return;
     }
     if (typeof icon === 'function') {
-      btn.appendChild(icon());
+      button.appendChild(icon());
       return;
     }
-    btn.appendChild(icon);
+    button.appendChild(icon);
   }
 }

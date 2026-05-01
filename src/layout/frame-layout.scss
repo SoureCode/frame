@@ -27,7 +27,7 @@
 .frame-rail {
   flex-shrink: 0;
   position: relative;
-  z-index: 3;
+  z-index: 120;
 
   &.top    { grid-area: top-rail; }
   &.bottom { grid-area: bot-rail; }
@@ -52,7 +52,7 @@
 
   &:not(.pinned) {
     position: absolute;
-    z-index: 4;
+    z-index: 130;
   }
 
   &.left:not(.pinned)   { left: 0; top: 0; bottom: 0; }
@@ -106,4 +106,17 @@
 
 .frame.animated .frame-dock.resizing {
   transition: none;
+}
+
+.panel.panel-fullscreen {
+  position: absolute;
+  inset: 0;
+  z-index: 140;
+  display: flex;
+  background: var(--frame-color-bg-dock);
+}
+
+.frame.animated .panel.panel-fullscreen {
+  transition:
+    inset var(--frame-transition-duration, 0.2s) var(--frame-transition-easing, ease);
 }

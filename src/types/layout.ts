@@ -8,6 +8,7 @@ export interface LayoutState {
   slotHasPinned: Record<SlotName, boolean>;
   panelPinned: Record<string, boolean>;
   panelSlot: Record<string, SlotName>;
+  fullscreenPanel: string | null;
   widescreen: boolean;
   animated: boolean;
 }

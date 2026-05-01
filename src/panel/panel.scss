@@ -36,6 +36,7 @@
   line-height: var(--frame-panel-header-height);
 }
 
+.panel-fullscreen-btn,
 .panel-pin,
 .panel-close {
   background: none;
@@ -45,7 +46,7 @@
   padding: 0;
   cursor: pointer;
   position: relative;
-  z-index: 3;
+  z-index: 120;
   color: var(--frame-color-panel-btn);
   width: var(--frame-panel-header-height);
   height: var(--frame-panel-header-height);
@@ -68,6 +69,11 @@
     filter: brightness(1.25);
     background: none;
   }
+}
+
+.panel-fullscreen .panel-pin,
+.panel-fullscreen .panel-close {
+  display: none;
 }
 
 .panel-content {
