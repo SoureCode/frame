@@ -199,18 +199,21 @@ test('dragging the left resizer changes dock width', async ({ page }) => {
 
 // Split ratio via drag
 test('dragging the left splitter changes the split ratio between its slots', async ({ page }) => {
-  const splitter = page.locator('.frame-dock.left .frame-splitter');
-  const box = await splitter.boundingBox();
-  if (!box) { throw new Error('splitter not found'); }
-
-  const cx = box.x + box.width / 2;
-  const cy = box.y + box.height / 2;
-
   const slotBefore = await page.locator('.frame-dock.left .dock-slot').first().boundingBox();
-  await page.mouse.move(cx, cy);
-  await page.mouse.down();
-  await page.mouse.move(cx, cy + 60, { steps: 10 });
-  await page.mouse.up();
+
+  await page.evaluate(() => {
+    const splitter = document.querySelector('.frame-dock.left .frame-splitter') as HTMLElement;
+    const dock = splitter.parentElement!;
+    const rect = dock.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    splitter.dispatchEvent(new PointerEvent('pointerdown', { button: 0, bubbles: true, pointerId: 1, clientX: x, clientY: y }));
+    splitter.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerId: 1, clientX: x, clientY: y + 60 }));
+    splitter.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1 }));
+  });
+
+  await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => resolve())));
+
   const slotAfter = await page.locator('.frame-dock.left .dock-slot').first().boundingBox();
 
   expect(slotAfter!.height).not.toBeCloseTo(slotBefore!.height, -1);
